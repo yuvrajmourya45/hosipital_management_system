@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets_admin/assets";
 import { hello } from "../assets/assets_frontend/assets";
-import RegisterForm from "../pages/Register";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  const [showRegister, setShowRegister] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   // ✅ Check login status automatically
   useEffect(() => {
@@ -47,6 +46,18 @@ const Navbar = () => {
     };
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // ✅ Logout function (role-based redirect)
   const handleLogout = () => {
     const userRole = user?.role;
@@ -75,98 +86,119 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400">
+      <div className="flex items-center justify-between text-sm py-3 px-4 sm:px-6 mb-5 border-b border-b-gray-400">
         {/* Logo */}
         <img
           onClick={() => navigate("/")}
-          className="w-44 cursor-pointer"
+          className="w-32 sm:w-40 lg:w-44 cursor-pointer"
           src={assets.admin_logo}
           alt="Logo"
         />
 
         {/* Desktop Menu */}
-        <ul className="hidden md:flex items-start gap-5 font-medium">
-          <NavLink to="/"><li className="py-1">HOME</li></NavLink>
-          <NavLink to="/doctors"><li className="py-1">ALL DOCTORS</li></NavLink>
-          <NavLink to="/about"><li className="py-1">ABOUT</li></NavLink>
-          <NavLink to="/contact"><li className="py-1">CONTACT</li></NavLink>
+        <ul className="hidden md:flex items-start gap-3 lg:gap-5 font-medium text-xs sm:text-sm">
+          <NavLink to="/"><li className="py-1 hover:text-blue-600 transition-colors">HOME</li></NavLink>
+          <NavLink to="/doctors"><li className="py-1 hover:text-blue-600 transition-colors">ALL DOCTORS</li></NavLink>
+          <NavLink to="/about"><li className="py-1 hover:text-blue-600 transition-colors">ABOUT</li></NavLink>
+          <NavLink to="/contact"><li className="py-1 hover:text-blue-600 transition-colors">CONTACT</li></NavLink>
         </ul>
 
         {/* Right Side */}
-        <div className="flex items-center gap-4">
-          {/* Admin/Doctor Panel */}
-          {!token && (
-            <div className="relative hidden md:block">
-              <button
-                onClick={() => setShowAdminDropdown(!showAdminDropdown)}
-                className="border border-gray-300 px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-100 transition"
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Logged-in view */}
+          {token && (
+            <div className="relative" ref={dropdownRef}>
+              <div 
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1 transition-colors"
               >
-                Admin Panel
-              </button>
+                <img
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-300"
+                  src={getProfileImage()}
+                  alt="Profile"
+                  onError={(e) => (e.target.src = hello.profile_pic)}
+                />
+                <img 
+                  className={`w-2 sm:w-2.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} 
+                  src={hello.dropdown_icon} 
+                  alt="Dropdown" 
+                />
+              </div>
 
-              {showAdminDropdown && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded shadow-lg z-50">
-                  <button
-                    onClick={() => { navigate("/admin-login"); setShowAdminDropdown(false); }}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute top-full right-0 mt-2 min-w-40 sm:min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {user?.role === "user" && (
+                    <>
+                      <p 
+                        onClick={() => {
+                          navigate("/my-profile");
+                          setDropdownOpen(false);
+                        }} 
+                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                      >
+                        My Profile
+                      </p>
+                      <p 
+                        onClick={() => {
+                          navigate("/my-appointments");
+                          setDropdownOpen(false);
+                        }} 
+                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                      >
+                        My Appointments
+                      </p>
+                    </>
+                  )}
+                  {user?.role === "admin" && (
+                    <p 
+                      onClick={() => {
+                        navigate("/admin-dashboard");
+                        setDropdownOpen(false);
+                      }} 
+                      className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                    >
+                      Admin Dashboard
+                    </p>
+                  )}
+                  {user?.role === "doctor" && (
+                    <p 
+                      onClick={() => {
+                        navigate("/doctor-dashboard");
+                        setDropdownOpen(false);
+                      }} 
+                      className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                    >
+                      Doctor Dashboard
+                    </p>
+                  )}
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <p 
+                    onClick={() => {
+                      handleLogout();
+                      setDropdownOpen(false);
+                    }} 
+                    className="px-4 py-2 text-sm hover:bg-red-50 text-red-600 cursor-pointer transition-colors"
                   >
-                    Admin Login
-                  </button>
-                  <button
-                    onClick={() => { navigate("/doctor-login"); setShowAdminDropdown(false); }}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                  >
-                    Doctor Login
-                  </button>
+                    Logout
+                  </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Logged-in view */}
-          {token && (
-            <div className="flex items-center gap-2 cursor-pointer group relative">
-              <img
-                className="w-8 h-8 rounded-full object-cover border border-gray-300"
-                src={getProfileImage()}
-                alt="Profile"
-                onError={(e) => (e.target.src = hello.profile_pic)}
-              />
-              <img className="w-2.5" src={hello.dropdown_icon} alt="Dropdown" />
-
-              {/* Dropdown */}
-              <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-600 z-20 hidden group-hover:block">
-                <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4">
-                  {user?.role === "user" && (
-                    <>
-                      <p onClick={() => navigate("/my-profile")} className="hover:text-black cursor-pointer">My Profile</p>
-                      <p onClick={() => navigate("/my-appointments")} className="hover:text-black cursor-pointer">My Appointments</p>
-                    </>
-                  )}
-                  {user?.role === "admin" && (
-                    <p onClick={() => navigate("/admin-dashboard")} className="hover:text-black cursor-pointer">Admin Dashboard</p>
-                  )}
-                  {user?.role === "doctor" && (
-                    <p onClick={() => navigate("/doctor-dashboard")} className="hover:text-black cursor-pointer">Doctor Dashboard</p>
-                  )}
-                  <p onClick={handleLogout} className="hover:text-black cursor-pointer">Logout</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Not logged in */}
           {!token && (
-            <div className="hidden md:flex gap-3">
+            <div className="hidden sm:flex gap-2 lg:gap-3">
               <button
                 onClick={() => navigate("/login")}
-                className="bg-blue-500 text-white px-6 py-3 rounded-full font-light"
+                className="bg-blue-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-light text-xs sm:text-sm hover:bg-blue-600 transition-colors"
               >
                 Login
               </button>
               <button
-                onClick={() => setShowRegister(true)}
-                className="border border-blue-500 text-blue-500 px-6 py-3 rounded-full font-light"
+                onClick={() => navigate("/register")}
+                className="border border-blue-500 text-blue-500 px-4 sm:px-6 py-2 sm:py-3 rounded-full font-light text-xs sm:text-sm hover:bg-blue-50 transition-colors"
               >
                 Sign Up
               </button>
@@ -176,7 +208,7 @@ const Navbar = () => {
           {/* Mobile Menu Icon */}
           <img
             onClick={() => setShowMenu(true)}
-            className="w-6 md:hidden cursor-pointer"
+            className="w-5 sm:w-6 md:hidden cursor-pointer"
             src={hello.menu_icon}
             alt="Menu"
           />
@@ -185,36 +217,25 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <div className={`${showMenu ? "fixed w-full" : "h-0 w-0"} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}>
-        <div className="flex justify-between items-center px-5 py-6">
-          <img className="w-36" src={hello.logo} alt="Logo" />
-          <img onClick={() => setShowMenu(false)} className="w-7 cursor-pointer" src={hello.cross_icon} alt="Close" />
+        <div className="flex justify-between items-center px-4 sm:px-5 py-4 sm:py-6 border-b">
+          <img className="w-28 sm:w-36" src={hello.logo} alt="Logo" />
+          <img onClick={() => setShowMenu(false)} className="w-6 sm:w-7 cursor-pointer" src={hello.cross_icon} alt="Close" />
         </div>
 
-        <ul className="flex flex-col items-center gap-2 mt-5 px-5 text-lg font-medium">
-          <NavLink to="/" onClick={() => setShowMenu(false)}><p className="px-4 py-2 rounded inline-block">Home</p></NavLink>
-          <NavLink to="/doctors" onClick={() => setShowMenu(false)}><p className="px-4 py-2 rounded inline-block">All Doctors</p></NavLink>
-          <NavLink to="/about" onClick={() => setShowMenu(false)}><p className="px-4 py-2 rounded inline-block">About</p></NavLink>
-          <NavLink to="/contact" onClick={() => setShowMenu(false)}><p className="px-4 py-2 rounded inline-block">Contact</p></NavLink>
-
-          {/* Admin/Doctor in Mobile Menu */}
-          {!token && (
-            <div className="flex flex-col gap-1 mt-3 w-full px-5">
-              <button onClick={() => { navigate("/admin-login"); setShowMenu(false); }} className="px-4 py-2 border rounded hover:bg-gray-100 text-left">Admin Login</button>
-              <button onClick={() => { navigate("/doctor-login"); setShowMenu(false); }} className="px-4 py-2 border rounded hover:bg-gray-100 text-left">Doctor Login</button>
-            </div>
-          )}
+        <ul className="flex flex-col items-center gap-1 sm:gap-2 mt-4 sm:mt-5 px-4 sm:px-5 text-base sm:text-lg font-medium">
+          <NavLink to="/" onClick={() => setShowMenu(false)}><p className="px-4 py-2 sm:py-3 rounded inline-block w-full text-center hover:bg-gray-100 transition-colors">Home</p></NavLink>
+          <NavLink to="/doctors" onClick={() => setShowMenu(false)}><p className="px-4 py-2 sm:py-3 rounded inline-block w-full text-center hover:bg-gray-100 transition-colors">All Doctors</p></NavLink>
+          <NavLink to="/about" onClick={() => setShowMenu(false)}><p className="px-4 py-2 sm:py-3 rounded inline-block w-full text-center hover:bg-gray-100 transition-colors">About</p></NavLink>
+          <NavLink to="/contact" onClick={() => setShowMenu(false)}><p className="px-4 py-2 sm:py-3 rounded inline-block w-full text-center hover:bg-gray-100 transition-colors">Contact</p></NavLink>
 
           {!token && (
-            <div className="flex gap-3 mt-4">
-              <button onClick={() => { setShowMenu(false); navigate("/login"); }} className="bg-blue-500 text-white px-5 py-2 rounded-full">Login</button>
-              <button onClick={() => { setShowMenu(false); setShowRegister(true); }} className="border border-blue-500 text-blue-500 px-5 py-2 rounded-full">Sign Up</button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6 w-full px-2">
+              <button onClick={() => { setShowMenu(false); navigate("/login"); }} className="bg-blue-500 text-white px-4 sm:px-5 py-2 sm:py-3 rounded-full text-sm sm:text-base hover:bg-blue-600 transition-colors">Login</button>
+              <button onClick={() => { setShowMenu(false); navigate("/register"); }} className="border border-blue-500 text-blue-500 px-4 sm:px-5 py-2 sm:py-3 rounded-full text-sm sm:text-base hover:bg-blue-50 transition-colors">Sign Up</button>
             </div>
           )}
         </ul>
       </div>
-
-      {/* Register Popup */}
-      {showRegister && <RegisterForm onClose={() => setShowRegister(false)} />}
     </>
   );
 };

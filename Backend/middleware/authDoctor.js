@@ -1,27 +1,20 @@
 import jwt from "jsonwebtoken";
-import User from "../models/UserModel.js"; // Doctor user model
 
-const authDoctor = async (req, res, next) => {
+const authDoctor = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer "))
+    return res.status(401).json({ message: "Not authorized" });
+
+  const token = authHeader.split(" ")[1];
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Not authorized" });
-    }
-
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Find user in DB
-    const user = await User.findById(decoded.id);
-    if (!user || user.role !== "doctor") {
-      return res.status(403).json({ success: false, message: "Doctor access only" });
+    if (decoded.role !== "doctor") {
+      return res.status(403).json({ message: "Doctor access only" });
     }
-
-    req.user = user; // attach doctor info to request
+    req.user = decoded;
     next();
   } catch (error) {
-    console.error(error);
-    res.status(401).json({ success: false, message: "Invalid token" });
+    res.status(401).json({ message: "Invalid token" });
   }
 };
 

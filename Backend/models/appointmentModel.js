@@ -1,13 +1,23 @@
 import mongoose from "mongoose";
 
 const AppointmentSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" },
-  date: String,
-  time: String,
-  status: { type: String, default: "pending" },
-  speciality: String,
-  image: String,
-});
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  doctor: { type: mongoose.Schema.Types.Mixed, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  userData: { type: Object },
+  docData: { type: Object },
+  amount: { type: Number, required: true },
+  speciality: { type: String },
+  date_booked: { type: Number, default: Date.now },
+  cancelled: { type: Boolean, default: false },
+  payment: { type: Boolean, default: false },
+  isCompleted: { type: Boolean, default: false },
+  status: { type: String, enum: ['pending', 'confirmed', 'rejected', 'completed', 'cancelled'], default: 'pending' },
+  cancelledAt: { type: Date },
+  cancelledBy: { type: String, enum: ['user', 'doctor', 'admin'] },
+  cancellationReason: { type: String },
+}, { timestamps: true });
 
-export default mongoose.model("Appointment", AppointmentSchema);
+export default mongoose.models.Appointment || mongoose.model("Appointment", AppointmentSchema);
+

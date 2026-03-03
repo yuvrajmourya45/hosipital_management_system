@@ -1,5 +1,5 @@
 import React from "react";
-import { hello } from "../assets/assets_frontend/assets";
+import { hello } from "../../assets/assets_frontend/assets";
 const About = () => {
   return (
     <div>

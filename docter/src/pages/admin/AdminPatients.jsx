@@ -8,7 +8,9 @@ export default function AdminPatients() {
   // Fetch all patients from backend
   const loadPatients = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/patients");
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const res = await axios.get("http://localhost:8000/api/admin/users", config);
       setPatients(res.data);
     } catch (err) {
       console.log("Error loading patients", err);
