@@ -1,7 +1,7 @@
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
-import doctorModel from "../models/doctorModel.js";
+import DoctorModel from "../models/DoctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
 
@@ -67,8 +67,6 @@ const loginAdmin = async (req, res) => {
 
     // compare with admin credentials from .env
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-      // ❌ old code had a bug: (email+password.process.env.JWT_SECRET)
-      // ✅ correct way:
       const token = jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
       res.json({ success: true, token });

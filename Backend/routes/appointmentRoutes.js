@@ -1,6 +1,6 @@
 import express from "express";
 import Appointment from "../models/AppointmentModel.js";
-import Doctor from "../models/DoctorModel.js";
+import DoctorModel from "../models/DoctorModel.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import { notifyDoctorOfCancellation, notifyUserOfCancellation, notifyDoctorOfNewAppointment, notifyDoctorOfConfirmation } from "../utils/notificationService.js";
 
