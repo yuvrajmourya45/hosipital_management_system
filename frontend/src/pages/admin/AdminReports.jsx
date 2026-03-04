@@ -15,9 +15,9 @@ export default function AdminReports() {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [doc, pat, app] = await Promise.all([
-        axios.get("http://localhost:8000/api/admin/doctors", config),
-        axios.get("http://localhost:8000/api/admin/users", config),
-        axios.get("http://localhost:8000/api/admin/appointments", config)
+        axios.get("https://hosipital-backend.onrender.com/api/admin/doctors", config),
+        axios.get("https://hosipital-backend.onrender.com/api/admin/users", config),
+        axios.get("https://hosipital-backend.onrender.com/api/admin/appointments", config)
       ]);
 
       setStats({

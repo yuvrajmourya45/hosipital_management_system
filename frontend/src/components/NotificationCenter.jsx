@@ -18,7 +18,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
     try {
       setLoading(true);
       console.log('Fetching notifications for doctorId:', doctorId);
-      const response = await axios.get(`http://localhost:8000/api/notifications/doctor/${doctorId}`);
+      const response = await axios.get(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}`);
       console.log('Notification response:', response.data);
       if (response.data.success) {
         setNotifications(response.data.notifications);
@@ -35,7 +35,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
-      await axios.patch(`http://localhost:8000/api/notifications/${notificationId}/read`, {
+      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/${notificationId}/read`, {
         doctorId
       });
       setNotifications(prev => 
@@ -50,7 +50,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch(`http://localhost:8000/api/notifications/doctor/${doctorId}/read-all`);
+      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}/read-all`);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {

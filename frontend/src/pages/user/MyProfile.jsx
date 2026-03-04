@@ -30,7 +30,7 @@ const MyProfile = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/auth/profile/${userData._id}`,
+        `https://hosipital-backend.onrender.com/api/auth/profile/${userData._id}`,
         formData,
         {
           headers: {
