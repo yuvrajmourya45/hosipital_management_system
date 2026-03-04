@@ -1,7 +1,7 @@
 import User from "../models/UserModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import Appointment from "../models/AppointmentModel.js";
+import Appointment from "../models/appointmentModel.js";
 
 
 // Register

@@ -5,7 +5,7 @@ import multer from "multer";
 import path from "path";
 import User from "../models/UserModel.js";
 import DoctorModel from "../models/DoctorModel.js";
-import AppointmentModel from "../models/AppointmentModel.js";
+import AppointmentModel from "../models/appointmentModel.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
