@@ -15,13 +15,14 @@ const AppContextProvider = ({ children }) => {
       console.log('Doctors data from backend:', data);
       if (data && data.length > 0) {
         setDoctors(data);
+        console.log('✅ Using backend doctors:', data.length);
       } else {
-        console.log('No backend data, using local doctors');
-        setDoctors(localDoctors);
+        console.log('❌ No doctors found in backend');
+        setDoctors([]);
       }
     } catch (error) {
-      console.log('Error fetching doctors:', error);
-      setDoctors(localDoctors);
+      console.log('❌ Error fetching doctors:', error);
+      setDoctors([]);
     }
   };
 
