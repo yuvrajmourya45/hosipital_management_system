@@ -1,6 +1,6 @@
 import express from "express";
 import AppointmentModel from "../models/appointmentModel.js";
-import DoctorModel from "../models/DoctorModel.js";
+import DoctorModel from "./models/doctorModel.js";
 import User from "../models/UserModel.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
