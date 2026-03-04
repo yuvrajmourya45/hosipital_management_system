@@ -68,8 +68,8 @@ export default function AdminDashboard() {
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [adminRes, statsRes] = await Promise.all([
-          axios.get("http://localhost:8000/api/admin/me", config),
-          axios.get("http://localhost:8000/api/admin/stats", config),
+          axios.get("https://hosipital-backend.onrender.com/api/admin/me", config),
+          axios.get("https://hosipital-backend.onrender.com/api/admin/stats", config),
         ]);
 
         setAdmin(adminRes.data);
@@ -389,7 +389,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td className="px-4 lg:px-6 py-3 lg:py-4 hidden sm:table-cell">
                                   <div className="flex items-center gap-2">
-                                    <img src={a.doctor?.image?.startsWith('http') ? a.doctor.image : `http://localhost:8000${a.doctor.image}`} className="w-6 h-6 lg:w-7 lg:h-7 rounded-full object-cover" alt="" />
+                                    <img src={a.doctor?.image?.startsWith('http') ? a.doctor.image : `https://hosipital-backend.onrender.com${a.doctor.image}`} className="w-6 h-6 lg:w-7 lg:h-7 rounded-full object-cover" alt="" />
                                     <span className="text-sm font-semibold text-slate-600">{a.doctor?.name}</span>
                                   </div>
                                 </td>

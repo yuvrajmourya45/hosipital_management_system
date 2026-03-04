@@ -55,7 +55,7 @@ export default function AddDoctor() {
 
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.post("http://localhost:8000/api/admin/add-doctor", data, {
+            const res = await axios.post("https://hosipital-backend.onrender.com/api/admin/add-doctor", data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",

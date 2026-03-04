@@ -65,7 +65,7 @@ const MyProfile = () => {
                 profilePic
                   ? URL.createObjectURL(profilePic)
                   : userData.profilePic
-                  ? `http://localhost:8000${userData.profilePic}`
+                  ? `https://hosipital-backend.onrender.com${userData.profilePic}`
                   : "https://via.placeholder.com/120"
               }
               alt="Profile"

@@ -39,8 +39,8 @@ const DoctorDashboard = () => {
     if (!img) return null;
     if (typeof img !== 'string') return null;
     if (img.startsWith('http')) return img;
-    if (img.startsWith('/')) return `http://localhost:8000${img}`;
-    return `http://localhost:8000/uploads/${img}`;
+    if (img.startsWith('/')) return `https://hosipital-backend.onrender.com${img}`;
+    return `https://hosipital-backend.onrender.com/uploads/${img}`;
   };
 
   useEffect(() => {
@@ -68,8 +68,8 @@ const DoctorDashboard = () => {
     try {
       setLoading(true);
       const [docRes, apptRes] = await Promise.all([
-        axios.get(`http://localhost:8000/api/doctor/profile/${doctorId}`),
-        axios.get(`http://localhost:8000/api/appointments/doctor/${doctorId}`)
+        axios.get(`https://hosipital-backend.onrender.com/api/doctor/profile/${doctorId}`),
+        axios.get(`https://hosipital-backend.onrender.com/api/appointments/doctor/${doctorId}`)
       ]);
       setDoctor(docRes.data);
       setAvailable(docRes.data.available ?? true);
@@ -103,7 +103,7 @@ const DoctorDashboard = () => {
   const toggleAvailability = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/doctor/availability/${doctorId}`,
+        `https://hosipital-backend.onrender.com/api/doctor/availability/${doctorId}`,
         { available: !available },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -124,7 +124,7 @@ const DoctorDashboard = () => {
   const handleAppointmentAction = async (appointmentId, status) => {
     try {
       const response = await axios.patch(
-        `http://localhost:8000/api/appointments/${appointmentId}/status`,
+        `https://hosipital-backend.onrender.com/api/appointments/${appointmentId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -147,7 +147,7 @@ const DoctorDashboard = () => {
       });
       if (imageFile) updateData.append('image', imageFile);
       const res = await axios.put(
-        `http://localhost:8000/api/doctor/profile/${doctorId}`,
+        `https://hosipital-backend.onrender.com/api/doctor/profile/${doctorId}`,
         updateData,
         { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } }
       );

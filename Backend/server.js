@@ -56,6 +56,15 @@ mongoose
 
 // ==================== NEW API ROUTES ====================
 
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({ message: "Hospital Management System Backend is running!", status: "OK" });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({ message: "Backend is healthy!", status: "OK", timestamp: new Date().toISOString() });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/admin", adminRouter);
