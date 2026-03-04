@@ -30,7 +30,7 @@ const MyAppointments = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `http://localhost:8000/api/appointments/${user._id}`,
+        `https://hosipital-backend.onrender.com/api/appointments/${user._id}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       
@@ -39,7 +39,7 @@ const MyAppointments = () => {
         res.data.map(async (apt) => {
           if (typeof apt.doctor === 'string' && apt.doctor.match(/^[0-9a-fA-F]{24}$/)) {
             try {
-              const doctorRes = await axios.get(`http://localhost:8000/api/doctor/profile/${apt.doctor}`);
+              const doctorRes = await axios.get(`https://hosipital-backend.onrender.com/api/doctor/profile/${apt.doctor}`);
               return { ...apt, doctor: doctorRes.data };
             } catch (err) {
               console.log('Failed to fetch doctor:', err);
@@ -108,7 +108,7 @@ const MyAppointments = () => {
     if (!window.confirm(confirmMessage)) return;
     
     try {
-      const response = await axios.patch(`http://localhost:8000/api/appointments/${id}/cancel`, {}, {
+      const response = await axios.patch(`https://hosipital-backend.onrender.com/api/appointments/${id}/cancel`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       
@@ -200,11 +200,11 @@ const MyAppointments = () => {
                   // server now returns absolute URL, but handle relative just in case
                   image = item.doctor.image.startsWith('http')
                     ? item.doctor.image
-                    : `http://localhost:8000${item.doctor.image.startsWith('/') ? '' : '/'}${item.doctor.image}`;
+                    : `https://hosipital-backend.onrender.com${item.doctor.image.startsWith('/') ? '' : '/'}${item.doctor.image}`;
                 } else if (demoDoctor?.image) {
                   image = demoDoctor.image.startsWith('http')
                     ? demoDoctor.image
-                    : `http://localhost:8000${demoDoctor.image.startsWith('/') ? '' : '/'}${demoDoctor.image}`;
+                    : `https://hosipital-backend.onrender.com${demoDoctor.image.startsWith('/') ? '' : '/'}${demoDoctor.image}`;
                 }
                 
                 console.log('📋 Final data:', { doctorName: formattedName, speciality, image });

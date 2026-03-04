@@ -78,7 +78,7 @@ const Navbar = () => {
       if (user.profilePic.startsWith("http")) {
         return user.profilePic;
       } else {
-        return `http://localhost:8000/${user.profilePic}`;
+        return `https://hosipital-backend.onrender.com/${user.profilePic}`;
       }
     }
     return hello.profile_pic;

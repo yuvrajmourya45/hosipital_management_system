@@ -33,7 +33,7 @@ const Appointment = () => {
     // Fetch booked slots for this doctor
     const fetchBookedSlots = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/appointments/doctor/${docInfo._id}`);
+        const res = await fetch(`https://hosipital-backend.onrender.com/api/appointments/doctor/${docInfo._id}`);
         const data = await res.json();
         const booked = data.filter(apt => !apt.cancelled && apt.status !== 'rejected')
           .map(apt => `${apt.date}-${apt.time}`);
@@ -88,7 +88,7 @@ const Appointment = () => {
     console.log('🏥 Doctor ID being sent:', docInfo._id);
 
     try {
-      const res = await fetch("http://localhost:8000/api/appointments", {
+      const res = await fetch("https://hosipital-backend.onrender.com/api/appointments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

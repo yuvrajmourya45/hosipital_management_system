@@ -15,7 +15,7 @@ const DoctorLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8000/api/doctor/login", { email, password });
+      const response = await axios.post("https://hosipital-backend.onrender.com/api/doctor/login", { email, password });
       
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("doctor", JSON.stringify(response.data.doctor));

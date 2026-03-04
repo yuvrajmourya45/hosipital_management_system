@@ -14,7 +14,7 @@ const AdminLogin = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:8000/api/auth/login", { email, password });
+      const response = await axios.post("https://hosipital-backend.onrender.com/api/auth/login", { email, password });
       const user = response.data.user;
 
       if (user.role !== "admin") {
