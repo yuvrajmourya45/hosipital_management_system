@@ -50,7 +50,7 @@ const addDoctor = async (req, res) => {
       date: Date.now(),
     };
 
-    const newDoctor = new doctorModel(doctorData);
+    const newDoctor = new DoctorModel(doctorData);
     await newDoctor.save();
 
     res.json({ success: true, message: "Doctor Added" });
@@ -83,7 +83,7 @@ const loginAdmin = async (req, res) => {
 const verifyDoctor = async (req, res) => {
   try {
     const { doctorId } = req.body;
-    await doctorModel.findByIdAndUpdate(doctorId, { isVerified: true });
+    await DoctorModel.findByIdAndUpdate(doctorId, { isVerified: true });
     res.json({ success: true, message: "Doctor verified successfully" });
   } catch (error) {
     res.json({ success: false, message: error.message });
@@ -93,7 +93,7 @@ const verifyDoctor = async (req, res) => {
 // Get All Doctors (Admin)
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await doctorModel.find({}).select('-password');
+    const doctors = await DoctorModel.find({}).select('-password');
     res.json({ success: true, doctors });
   } catch (error) {
     res.json({ success: false, message: error.message });

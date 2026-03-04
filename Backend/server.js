@@ -16,7 +16,7 @@ import appointmentRoutes from "./routes/appointmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 
 // Models
-import doctorModel from "./models/doctorModel.js";
+import DoctorModel from "./models/DoctorModel.js";
 
 dotenv.config();
 
@@ -52,7 +52,7 @@ app.use("/api/notifications", notificationRoutes);
 // ==================== PUBLIC DOCTORS ====================
 app.get("/api/doctors", async (req, res) => {
   try {
-    const doctors = await doctorModel.find().select("-password");
+    const doctors = await DoctorModel.find().select("-password");
     const doctorsWithImageUrl = doctors.map(doc => {
       const obj = doc.toObject();
       // normalize image URL:
