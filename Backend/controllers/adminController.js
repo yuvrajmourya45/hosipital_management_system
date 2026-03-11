@@ -1,142 +1,291 @@
-import validator from "validator";
-import bcrypt from "bcryptjs";
-import { v2 as cloudinary } from "cloudinary";
-import DoctorModel from "../models/DoctorModel.js";
-import appointmentModel from "../models/appointmentModel.js";
 import jwt from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
+import User from "../models/UserModel.js";
+import DoctorModel from "../models/DoctorModel.js";
+import AppointmentModel from "../models/appointmentModel.js";
+import MedicalRecord from "../models/medicalRecordModel.js";
 
-// 🩺 API for adding doctor
-const addDoctor = async (req, res) => {
+const adminCheck = (req) => req.user.role !== "admin" ? { error: true } : null;
+
+// ==================== ADMIN LOGIN =========================
+export const loginAdmin = async (req, res) => {
   try {
-    const { name, email, password, speciality, degree, experience, about, fees, address, available, isVerified } = req.body;
-    const imageFile = req.file;
-
-    // checking for all data to add doctor
-    if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
-      return res.json({ success: false, message: "Missing Details" });
+    if (req.body.email === process.env.ADMIN_EMAIL && req.body.password === process.env.ADMIN_PASSWORD) {
+      const token = jwt.sign({ role: "admin" }, process.env.JWT_SECRET, { expiresIn: "7d" });
+      return res.json({ message: "Login ok", token, user: { role: "admin", email: process.env.ADMIN_EMAIL } });
     }
-
-    // validating email format
-    if (!validator.isEmail(email)) {
-      return res.json({ success: false, message: "Please enter a valid email" });
-    }
-
-    // validating password
-    if (password.length < 8) {
-      return res.json({ success: false, message: "Please enter a strong password" });
-    }
-
-    // hashing doctor password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // upload image to cloudinary
-    const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
-    const imageUrl = imageUpload.secure_url;
-
-    const doctorData = {
-      name,
-      email,
-      image: imageUrl,
-      password: hashedPassword,
-      speciality,
-      degree,
-      experience,
-      about,
-      fees,
-      address: JSON.parse(address),
-      available: available === 'true' || available === true,
-      isVerified: isVerified === 'true' || isVerified === true,
-      date: Date.now(),
-    };
-
-    const newDoctor = new DoctorModel(doctorData);
-    await newDoctor.save();
-
-    res.json({ success: true, message: "Doctor Added" });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    res.status(401).json({ message: "Invalid" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// 👨‍💼 API For Admin Login
-const loginAdmin = async (req, res) => {
+// ================== GET ADMIN DETAILS =========================
+export const getAdminDetails = (req, res) => {
+  if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+  res.json({ name: "Admin", email: process.env.ADMIN_EMAIL });
+};
+
+// ==================== DASHBOARD STATS ====================
+export const getDashboardStats = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    // compare with admin credentials from .env
-    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-      res.json({ success: true, token });
-    } else {
-      res.json({ success: false, message: "Invalid credentials" });
-    }
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const recentApts = await AppointmentModel.find().populate("user", "name email").sort({ createdAt: -1 }).limit(5);
+    const processedApts = await Promise.all(recentApts.map(async (apt) => {
+      const obj = apt.toObject();
+      if (typeof obj.doctor === 'string' && obj.doctor.match(/^[0-9a-fA-F]{24}$/)) {
+        const doc = await DoctorModel.findById(obj.doctor).select('name speciality image');
+        if (doc) {
+          const docObj = doc.toObject();
+          if (docObj.image && !docObj.image.startsWith('http')) {
+            docObj.image = `http://localhost:8000${docObj.image.startsWith('/') ? '' : '/'}${docObj.image}`;
+          }
+          obj.doctor = docObj;
+        }
+      }
+      return obj;
+    }));
+    res.json({
+      totalUsers: await User.countDocuments(),
+      totalDoctors: await DoctorModel.countDocuments(),
+      totalAppointments: await AppointmentModel.countDocuments(),
+      todayAppointments: await AppointmentModel.countDocuments({ date: new Date().toISOString().split('T')[0] }),
+      recentAppointments: processedApts
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Verify Doctor
-const verifyDoctor = async (req, res) => {
+// ===================== GET ALL APPOINTMENTS ========================
+export const getAllAppointments = async (req, res) => {
   try {
-    const { doctorId } = req.body;
-    await DoctorModel.findByIdAndUpdate(doctorId, { isVerified: true });
-    res.json({ success: true, message: "Doctor verified successfully" });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const apts = await AppointmentModel.find().populate("user", "name email").sort({ createdAt: -1 });
+    const processed = await Promise.all(apts.map(async (apt) => {
+      const obj = apt.toObject();
+      if (typeof obj.doctor === 'string' && obj.doctor.match(/^[0-9a-fA-F]{24}$/)) {
+        const doc = await DoctorModel.findById(obj.doctor).select('name speciality image');
+        if (doc) obj.doctor = doc.toObject();
+      }
+      return obj;
+    }));
+    res.json({ appointments: processed });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Get All Doctors (Admin)
-const getAllDoctors = async (req, res) => {
+// ======================= UPDATE APPOINTMENT STATUS =======================
+export const updateAppointmentStatus = async (req, res) => {
   try {
-    const doctors = await DoctorModel.find({}).select('-password');
-    res.json({ success: true, doctors });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
-  }
-};
-
-// Get All Appointments (Admin)
-const getAllAppointments = async (req, res) => {
-  try {
-    const appointments = await appointmentModel.find({})
-      .populate('user', 'name email')
-      .populate('doctor', 'name speciality image')
-      .sort({ createdAt: -1 });
-    res.json({ success: true, appointments });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
-  }
-};
-
-// Update Appointment Status (Admin)
-const updateAppointmentStatus = async (req, res) => {
-  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
     const { appointmentId, status } = req.body;
-    const appointment = await appointmentModel.findByIdAndUpdate(
-      appointmentId,
-      { status, isCompleted: status === 'completed' },
-      { new: true }
-    );
-    res.json({ success: true, message: `Appointment ${status}`, appointment });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
+    const data = { status, cancelled: status === 'rejected', isCompleted: status === 'completed' };
+    const apt = await AppointmentModel.findByIdAndUpdate(appointmentId, data, { new: true }).populate("doctor", "name speciality image").populate("user", "name email");
+    res.json({ message: `${status}`, appointment: apt });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Cancel Appointment (Admin)
-const cancelAppointment = async (req, res) => {
+// ========================== CANCEL APPOINTMENT =============================
+export const cancelAppointment = async (req, res) => {
   try {
-    const { appointmentId } = req.body;
-    await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
-    res.json({ success: true, message: 'Appointment cancelled' });
-  } catch (error) {
-    res.json({ success: false, message: error.message });
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    await AppointmentModel.findByIdAndUpdate(req.body.appointmentId, { cancelled: true, isCompleted: false });
+    res.json({ message: "Cancelled" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-export { addDoctor, loginAdmin, verifyDoctor, getAllDoctors, getAllAppointments, updateAppointmentStatus, cancelAppointment };
+// ========================== GET ALL DOCTORS =================================
+export const getAllDoctors = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    res.json(await DoctorModel.find().select("-password"));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ======================== TOGGLE DOCTOR AVAILABILITY ===========================
+export const toggleDoctorAvailability = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const doc = await DoctorModel.findById(req.body.docId);
+    if (!doc) return res.status(404).json({ message: "Not found" });
+    doc.available = !doc.available;
+    await doc.save();
+    res.json({ message: "Changed", available: doc.available });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ======================== VERIFY DOCTOR =====================================
+export const verifyDoctor = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const doc = await DoctorModel.findById(req.body.docId);
+    if (!doc) return res.status(404).json({ message: "Not found" });
+    doc.isVerified = !doc.isVerified;
+    await doc.save();
+    res.json({ message: doc.isVerified ? "Verified" : "Unverified", isVerified: doc.isVerified });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ========================= ADD DOCTOR ==================================
+export const addDoctor = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    if (await DoctorModel.findOne({ email: req.body.email })) return res.status(400).json({ message: "Exists" });
+    
+    let addr = req.body.address;
+    try { addr = typeof addr === 'string' ? JSON.parse(addr) : addr; } catch { addr = { line1: addr, line2: "" }; }
+    
+    let workingHours = req.body.workingHours;
+    try { workingHours = typeof workingHours === 'string' ? JSON.parse(workingHours) : workingHours; } catch { workingHours = { start: "09:00 AM", end: "05:00 PM" }; }
+    
+    console.log('Working Hours Received:', req.body.workingHours);
+    console.log('Working Hours Parsed:', workingHours);
+    
+    const doc = await new DoctorModel({
+      ...req.body,
+      password: await bcryptjs.hash(req.body.password, 10),
+      image: req.file ? `/uploads/${req.file.filename}` : "",
+      address: addr,
+      workingHours,
+      available: req.body.available === 'true' || req.body.available === true,
+      isVerified: req.body.isVerified === 'true' || req.body.isVerified === true
+    }).save();
+    
+    console.log('Doctor Saved:', doc.workingHours);
+    res.status(201).json({ message: "Added", doctor: doc });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ================================ UPDATE DOCTOR ==============================
+export const updateDoctor = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const data = { ...req.body };
+    if (req.file) data.image = `/uploads/${req.file.filename}`;
+    if (data.password) data.password = await bcryptjs.hash(data.password, 10);
+    const doc = await DoctorModel.findByIdAndUpdate(req.params.id, data, { new: true });
+    res.json({ message: "Updated", doctor: doc });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ============================ DELETE DOCTOR ============================
+export const deleteDoctor = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    await DoctorModel.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ========================== GET ALL USERS ================================
+export const getAllUsers = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    res.json(await User.find().select("-password"));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ========================== ADD USER ====================================
+export const addUser = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    if (await User.findOne({ email: req.body.email })) return res.status(400).json({ message: "Exists" });
+    const user = await new User({ ...req.body, password: await bcryptjs.hash(req.body.password, 10) }).save();
+    res.status(201).json({ message: "Added", user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ========================== UPDATE USER ==================================
+export const updateUser = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const data = { name: req.body.name, email: req.body.email };
+    if (req.body.password) data.password = await bcryptjs.hash(req.body.password, 10);
+    const user = await User.findByIdAndUpdate(req.params.id, data, { new: true });
+    res.json({ message: "Updated", user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ===================== DELETE USER =================================
+export const deleteUser = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ===================== GET PATIENT MEDICAL RECORDS =================================
+export const getPatientMedicalRecords = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const patient = await User.findById(req.params.userId).select('name email medicalHistory');
+    if (!patient) return res.status(404).json({ message: "Patient not found" });
+    
+    const medicalRecords = await MedicalRecord.find({ user: req.params.userId, isDeleted: false }).sort({ uploadDate: -1 });
+    
+    res.json({ success: true, patient: { ...patient.toObject(), medicalRecords } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ===================== GET PATIENT APPOINTMENTS =================================
+export const getPatientAppointments = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    const appointments = await AppointmentModel.find({ user: req.params.userId })
+      .sort({ createdAt: -1 });
+    
+    // Populate doctor details
+    const processedAppointments = await Promise.all(appointments.map(async (apt) => {
+      const obj = apt.toObject();
+      if (typeof obj.doctor === 'string' && obj.doctor.match(/^[0-9a-fA-F]{24}$/)) {
+        const doc = await DoctorModel.findById(obj.doctor).select('name speciality image');
+        if (doc) obj.doctor = doc.toObject();
+      }
+      return obj;
+    }));
+    
+    res.json({ success: true, appointments: processedAppointments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ===================== DELETE PATIENT RECORD =================================
+export const deletePatientRecord = async (req, res) => {
+  try {
+    if (adminCheck(req)?.error) return res.status(403).json({ message: "Admin only" });
+    await MedicalRecord.findByIdAndUpdate(req.params.recordId, { isDeleted: true });
+    res.json({ success: true, message: 'Record deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

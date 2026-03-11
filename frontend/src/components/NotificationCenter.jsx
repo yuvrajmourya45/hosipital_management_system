@@ -18,7 +18,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
     try {
       setLoading(true);
       console.log('Fetching notifications for doctorId:', doctorId);
-      const response = await axios.get(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}`);
+      const response = await axios.get(`http://localhost:8000/api/notifications/doctor/${doctorId}`);
       console.log('Notification response:', response.data);
       if (response.data.success) {
         setNotifications(response.data.notifications);
@@ -35,7 +35,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
   // Mark notification as read
   const markAsRead = async (notificationId) => {
     try {
-      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/${notificationId}/read`, {
+      await axios.patch(`http://localhost:8000/api/notifications/${notificationId}/read`, {
         doctorId
       });
       setNotifications(prev => 
@@ -50,7 +50,7 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
   // Mark all as read
   const markAllAsRead = async () => {
     try {
-      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}/read-all`);
+      await axios.patch(`http://localhost:8000/api/notifications/doctor/${doctorId}/read-all`);
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -121,14 +121,14 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 w-11/12 max-w-xl sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200 z-60 max-h-80 sm:max-h-96 overflow-y-auto">
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 w-[calc(100%-2rem)] max-w-md sm:max-w-lg md:max-w-xl bg-white rounded-2xl shadow-xl border border-slate-200 z-60 max-h-80 sm:max-h-96 overflow-y-auto">
           {/* Header */}
-          <div className="p-4 border-b border-slate-100 flex justify-between items-center">
+          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-              <h3 className="font-bold text-slate-800">Notifications</h3>
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Notifications</h3>
               <p className="text-xs text-slate-500">{unreadCount} unread</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={() => {
                   // Add test notification
@@ -208,13 +208,12 @@ const NotificationCenter = ({ doctorId, className = "" }) => {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-slate-100 bg-slate-50">
+            <div className="p-3 border-t border-slate-100 bg-slate-50 sticky bottom-0">
               <button
                 onClick={() => {
                   setIsOpen(false);
-                  // Could navigate to a full notifications page
                 }}
-                className="w-full text-center text-sm text-slate-600 hover:text-slate-800 font-medium"
+                className="w-full text-center text-xs sm:text-sm text-slate-600 hover:text-slate-800 font-medium"
               >
                 View all notifications
               </button>

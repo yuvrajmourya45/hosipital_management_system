@@ -17,6 +17,17 @@ const AppointmentSchema = new mongoose.Schema({
   cancelledAt: { type: Date },
   cancelledBy: { type: String, enum: ['user', 'doctor', 'admin'] },
   cancellationReason: { type: String },
+  prescription: {
+    diagnosis: { type: String },
+    medicines: [{
+      name: { type: String },
+      dosage: { type: String },
+      duration: { type: String },
+      instructions: { type: String }
+    }],
+    notes: { type: String },
+    addedAt: { type: Date }
+  }
 }, { timestamps: true });
 
 export default mongoose.models.Appointment || mongoose.model("Appointment", AppointmentSchema);

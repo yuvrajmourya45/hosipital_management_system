@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Users, Plus, Edit3, Trash2, X, Search, Mail, Key } from "lucide-react";
+import { Users, Plus, Edit3, Trash2, X, Search, Mail, Key, FileText } from "lucide-react";
 
-export default function UsersPage() {
+export default function UsersPage({ onViewPatient }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("https://hosipital-backend.onrender.com/api/admin/users", config);
+      const res = await axios.get("http://localhost:8000/api/admin/users", config);
       setUsers(res.data || []);
     } catch (err) {
       toast.error("Failed to load users");
@@ -38,10 +38,10 @@ export default function UsersPage() {
     e.preventDefault();
     try {
       if (editing) {
-        await axios.put(`https://hosipital-backend.onrender.com/api/admin/users/${editing._id}`, form, config);
+        await axios.put(`http://localhost:8000/api/admin/users/${editing._id}`, form, config);
         toast.success("User updated successfully");
       } else {
-        await axios.post("https://hosipital-backend.onrender.com/api/admin/users", form, config);
+        await axios.post("http://localhost:8000/api/admin/users", form, config);
         toast.success("User added successfully");
       }
       fetchUsers();
@@ -56,7 +56,7 @@ export default function UsersPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     try {
-      await axios.delete(`https://hosipital-backend.onrender.com/api/admin/users/${id}`, config);
+      await axios.delete(`http://localhost:8000/api/admin/users/${id}`, config);
       toast.success("User deleted");
       fetchUsers();
     } catch (err) {
@@ -136,6 +136,13 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => onViewPatient(user._id)}
+                          className="p-2.5 bg-white shadow-sm border border-slate-100 text-green-500 hover:bg-green-50 rounded-xl transition-all"
+                          title="View Medical Records"
+                        >
+                          <FileText size={18} />
+                        </button>
                         <button
                           onClick={() => { setEditing(user); setForm({ name: user.name, email: user.email, password: "" }); setModalOpen(true); }}
                           className="p-2.5 bg-white shadow-sm border border-slate-100 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"

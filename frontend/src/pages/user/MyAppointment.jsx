@@ -2,44 +2,51 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { doctors } from "../../assets/assets_frontend/assets";
+import { getBackendUrl } from "../../utils/api";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState({ show: false, message: "", type: "info" });
-  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
 
-  // 🔒 Check user login
+  // Get user from localStorage (ProtectedRoute already verified auth)
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && storedUser !== "undefined") setUser(JSON.parse(storedUser));
-      else navigate("/login");
-    } catch {
-      localStorage.removeItem("user");
-      navigate("/login");
+    const storedUser = localStorage.getItem("user");
+    if (storedUser && storedUser !== "undefined") {
+      setUser(JSON.parse(storedUser));
     }
-  }, [navigate]);
+  }, []);
 
   // 🔄 Fetch appointments
   const fetchAppointments = async () => {
-    if (!user?._id) return;
+    if (!user?._id) {
+      console.log('❌ No user ID found');
+      return;
+    }
     
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
+      console.log('🔑 Token:', token ? 'exists' : 'missing');
+      console.log('👤 User ID:', user._id);
+      console.log('🌐 API URL:', `${getBackendUrl()}/api/appointments`);
+      
       const res = await axios.get(
-        `https://hosipital-backend.onrender.com/api/appointments/${user._id}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        `${getBackendUrl()}/api/appointments`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      console.log('📥 Response data:', res.data);
+      console.log('📊 Appointments count:', res.data.length);
       
       // Manually fetch doctor data for each appointment
       const appointmentsWithDoctors = await Promise.all(
         res.data.map(async (apt) => {
           if (typeof apt.doctor === 'string' && apt.doctor.match(/^[0-9a-fA-F]{24}$/)) {
             try {
-              const doctorRes = await axios.get(`https://hosipital-backend.onrender.com/api/doctor/profile/${apt.doctor}`);
+              const doctorRes = await axios.get(`${getBackendUrl()}/api/doctor/profile/${apt.doctor}`);
               return { ...apt, doctor: doctorRes.data };
             } catch (err) {
               console.log('Failed to fetch doctor:', err);
@@ -81,16 +88,16 @@ const MyAppointments = () => {
     fetchAppointments();
   }, [user]);
 
-  // Auto-refresh appointments every 30 seconds to check for updates
+  // Auto-refresh appointments every 2 seconds to check for updates
   useEffect(() => {
     if (!user?._id) return;
     
     const interval = setInterval(() => {
       fetchAppointments();
-    }, 30000); // Check every 30 seconds
+    }, 2000); // Check every 2 seconds
     
     return () => clearInterval(interval);
-  }, [user, fetchAppointments]);
+  }, [user]);
 
   // 🔔 Popup function
   const showPopup = (message, type = "info") => {
@@ -108,7 +115,7 @@ const MyAppointments = () => {
     if (!window.confirm(confirmMessage)) return;
     
     try {
-      const response = await axios.patch(`https://hosipital-backend.onrender.com/api/appointments/${id}/cancel`, {}, {
+      const response = await axios.patch(`${getBackendUrl()}/api/appointments/${id}/cancel`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       
@@ -168,7 +175,7 @@ const MyAppointments = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {appointments.map((item) => {
                 console.log('🔍 Appointment item:', item);
-                console.log('👨‍⚕️ Doctor data:', item.doctor);
+                console.log('👨⚕️ Doctor data:', item.doctor);
                 console.log('📝 Doctor type:', typeof item.doctor);
                 console.log('📋 Doctor keys:', item.doctor ? Object.keys(item.doctor) : 'null');
                 
@@ -200,11 +207,11 @@ const MyAppointments = () => {
                   // server now returns absolute URL, but handle relative just in case
                   image = item.doctor.image.startsWith('http')
                     ? item.doctor.image
-                    : `https://hosipital-backend.onrender.com${item.doctor.image.startsWith('/') ? '' : '/'}${item.doctor.image}`;
+                    : `http://localhost:8000${item.doctor.image.startsWith('/') ? '' : '/'}${item.doctor.image}`;
                 } else if (demoDoctor?.image) {
                   image = demoDoctor.image.startsWith('http')
                     ? demoDoctor.image
-                    : `https://hosipital-backend.onrender.com${demoDoctor.image.startsWith('/') ? '' : '/'}${demoDoctor.image}`;
+                    : `http://localhost:8000${demoDoctor.image.startsWith('/') ? '' : '/'}${demoDoctor.image}`;
                 }
                 
                 console.log('📋 Final data:', { doctorName: formattedName, speciality, image });

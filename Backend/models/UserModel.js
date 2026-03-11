@@ -8,6 +8,19 @@ const userSchema = new mongoose.Schema({
   gender: String,
   profilePic: String,
   role: { type: String, enum: ["user", "doctor", "admin"], default: "user" },
+  medicalRecords: [{
+    fileName: String,
+    filePath: String,
+    fileType: String,
+    uploadDate: { type: Date, default: Date.now },
+    description: String
+  }],
+  medicalHistory: {
+    bloodGroup: String,
+    allergies: [String],
+    chronicDiseases: [String],
+    previousSurgeries: [String]
+  }
 });
 
 const User = mongoose.model("User", userSchema);

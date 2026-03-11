@@ -14,85 +14,77 @@ import doctorRouter from "./routes/doctorRoute.js";
 import userRoute from "./routes/userRoute.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import medicalRecordRoutes from "./routes/medicalRecordRoutes.js";
 
 // Models
-import DoctorModel from "./models/DoctorModel.js";
+import doctorModel from "./models/DoctorModel.js";
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 
 // CORS Configuration
-const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:5173", 
-    "https://hosipitalmanagementsystemfrontend.vercel.app",
-    "https://hosipital-backend.onrender.com"
-  ],
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control', 'Pragma']
+}));
 
-app.use(cors(corsOptions));
 app.use(express.json());
 
-// ==================== Ensure uploads folder ====================
+// Uploads Folder Setup
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+const medicalRecordsDir = path.join(__dirname, "uploads/medical-records");
+if (!fs.existsSync(medicalRecordsDir)) fs.mkdirSync(medicalRecordsDir, { recursive: true });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ==================== MONGODB CONNECT ====================
+// MongoDB Connection
 const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/docter";
 mongoose
   .connect(mongoUri)
   .then(() => console.log("✅ MongoDB Connected ->", mongoUri))
   .catch((err) => console.log("❌ MongoDB Error:", err));
 
-
-// ==================== NEW API ROUTES ====================
-
-// Health check endpoint
-app.get("/", (req, res) => {
-  res.json({ message: "Hospital Management System Backend is running!", status: "OK" });
-});
-
-app.get("/api/health", (req, res) => {
-  res.json({ message: "Backend is healthy!", status: "OK", timestamp: new Date().toISOString() });
-});
-
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/medical-records", medicalRecordRoutes);
 
-// ==================== PUBLIC DOCTORS ====================
+// User profile endpoint for doctor to view patient info
+app.get("/api/user/profile/:userId", async (req, res) => {
+  try {
+    const User = (await import("./models/UserModel.js")).default;
+    const user = await User.findById(req.params.userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Public Doctors Endpoint
 app.get("/api/doctors", async (req, res) => {
   try {
-    const doctors = await DoctorModel.find().select("-password");
+    const doctors = await doctorModel.find().select("-password");
     const doctorsWithImageUrl = doctors.map(doc => {
       const obj = doc.toObject();
-      // normalize image URL:
       if (obj.image) {
         if (obj.image.startsWith('http')) {
-          // already absolute
         } else if (obj.image.startsWith('/')) {
-          // could be "/uploads/xxx" or similar
-          obj.image = `${process.env.VERCEL_URL || 'http://localhost:8000'}${obj.image}`;
+          obj.image = `http://localhost:8000${obj.image}`;
         } else {
-          obj.image = `${process.env.VERCEL_URL || 'http://localhost:8000'}/uploads/${obj.image}`;
+          obj.image = `http://localhost:8000/uploads/${obj.image}`;
         }
       }
-      return {
-        ...obj,
-        available: obj.available !== undefined ? obj.available : true // Default to available if not set
-      };
+      return { ...obj, available: obj.available !== undefined ? obj.available : true };
     });
     res.json(doctorsWithImageUrl);
   } catch (err) {
@@ -100,6 +92,17 @@ app.get("/api/doctors", async (req, res) => {
   }
 });
 
-// ==================== SERVER START ====================
+// Debug Endpoint
+app.get("/api/debug/appointments", async (req, res) => {
+  try {
+    const Appointment = (await import("./models/appointmentModel.js")).default;
+    const allAppointments = await Appointment.find();
+    res.json({ count: allAppointments.length, appointments: allAppointments });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Server Start
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

@@ -10,7 +10,7 @@ export default function AdminPatients() {
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get("https://hosipital-backend.onrender.com/api/admin/users", config);
+      const res = await axios.get("http://localhost:8000/api/admin/users", config);
       setPatients(res.data);
     } catch (err) {
       console.log("Error loading patients", err);

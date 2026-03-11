@@ -12,9 +12,8 @@ const MyProfile = () => {
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) setUserData(JSON.parse(storedUser));
-    else navigate("/login");
     setLoading(false);
-  }, [navigate]);
+  }, []);
 
   const handleSave = async () => {
     if (!userData) return;
@@ -30,7 +29,7 @@ const MyProfile = () => {
 
     try {
       const res = await axios.put(
-        `https://hosipital-backend.onrender.com/api/auth/profile/${userData._id}`,
+        `http://localhost:8000/api/auth/profile/${userData._id}`,
         formData,
         {
           headers: {
@@ -50,7 +49,7 @@ const MyProfile = () => {
   };
 
   if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div></div>;
-  if (!userData) return <div className="text-center mt-20 text-gray-600">Please login first</div>;
+  if (!userData) return <div className="text-center mt-20 text-gray-600">Loading profile...</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-6 my-10">
@@ -65,7 +64,7 @@ const MyProfile = () => {
                 profilePic
                   ? URL.createObjectURL(profilePic)
                   : userData.profilePic
-                  ? `https://hosipital-backend.onrender.com${userData.profilePic}`
+                  ? `http://localhost:8000${userData.profilePic}`
                   : "https://via.placeholder.com/120"
               }
               alt="Profile"

@@ -16,6 +16,32 @@ const Appointment = () => {
   const [slotTime, setSlotTime] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [completedSlots, setCompletedSlots] = useState([]);
+
+  // Check if time slot is during a break
+  const isBreakTime = (time) => {
+    if (!docInfo?.workingHours?.breaks?.length) return false;
+    
+    const convertTo24 = (timeStr) => {
+      if (timeStr.includes(' ')) {
+        const [t, period] = timeStr.split(' ');
+        let [hours, minutes] = t.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+      }
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+    
+    const slotTime = convertTo24(time);
+    
+    return docInfo.workingHours.breaks.some(brk => {
+      const breakStart = convertTo24(brk.start);
+      const breakEnd = convertTo24(brk.end);
+      return slotTime >= breakStart && slotTime <= breakEnd;
+    });
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -33,11 +59,14 @@ const Appointment = () => {
     // Fetch booked slots for this doctor
     const fetchBookedSlots = async () => {
       try {
-        const res = await fetch(`https://hosipital-backend.onrender.com/api/appointments/doctor/${docInfo._id}`);
+        const res = await fetch(`http://localhost:8000/api/appointments/doctor/${docInfo._id}`);
         const data = await res.json();
-        const booked = data.filter(apt => !apt.cancelled && apt.status !== 'rejected')
+        const booked = data.filter(apt => !apt.cancelled && apt.status !== 'rejected' && apt.status !== 'completed')
+          .map(apt => `${apt.date}-${apt.time}`);
+        const completed = data.filter(apt => apt.status === 'completed')
           .map(apt => `${apt.date}-${apt.time}`);
         setBookedSlots(booked);
+        setCompletedSlots(completed);
       } catch (err) {
         console.log('Error fetching booked slots:', err);
       }
@@ -46,10 +75,35 @@ const Appointment = () => {
     fetchBookedSlots();
     
     const times = [
-      "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-      "12:00 PM", "12:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
-      "04:00 PM", "04:30 PM", "05:00 PM"
+      "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", 
+      "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
+      "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM", 
+      "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM", 
+      "08:00 PM", "08:30 PM", "09:00 PM"
     ];
+    
+    // Filter times based on doctor's working hours
+    const filterTimesByWorkingHours = (times) => {
+      if (!docInfo.workingHours) return times;
+      
+      const convertTo24 = (time) => {
+        const [timeStr, period] = time.split(' ');
+        let [hours, minutes] = timeStr.split(':').map(Number);
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+      };
+      
+      const startTime = convertTo24(docInfo.workingHours.start);
+      const endTime = convertTo24(docInfo.workingHours.end);
+      
+      return times.filter(time => {
+        const slotTime = convertTo24(time);
+        return slotTime >= startTime && slotTime <= endTime;
+      });
+    };
+    
+    const filteredTimes = filterTimesByWorkingHours(times);
 
     const today = new Date();
     const slots = [];
@@ -60,7 +114,7 @@ const Appointment = () => {
       slots.push({
         day: daysOfWeek[currentDate.getDay()],
         date: currentDate.getDate(),
-        times,
+        times: filteredTimes,
         fullDate: currentDate.toISOString().split("T")[0],
       });
     }
@@ -88,7 +142,7 @@ const Appointment = () => {
     console.log('🏥 Doctor ID being sent:', docInfo._id);
 
     try {
-      const res = await fetch("https://hosipital-backend.onrender.com/api/appointments", {
+      const res = await fetch("http://localhost:8000/api/appointments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,22 +282,82 @@ const Appointment = () => {
               {slotIndex !== null && docSlots[slotIndex] && docSlots[slotIndex].times.map((time, index) => {
                 const selectedDate = docSlots[slotIndex].fullDate;
                 const slotKey = `${selectedDate}-${time}`;
+                const isCompleted = completedSlots.includes(slotKey);
                 const isBooked = bookedSlots.includes(slotKey);
+                const isBreak = isBreakTime(time);
+                
+                // Only check past time for today's date
+                const today = new Date().toISOString().split('T')[0];
+                let isPastTime = false;
+                if (selectedDate === today) {
+                  const now = new Date();
+                  const [timeStr, period] = time.split(' ');
+                  let [hours, minutes] = timeStr.split(':').map(Number);
+                  if (period === 'PM' && hours !== 12) hours += 12;
+                  if (period === 'AM' && hours === 12) hours = 0;
+                  const slotTime = hours * 60 + minutes;
+                  const currentTime = now.getHours() * 60 + now.getMinutes();
+                  isPastTime = slotTime <= currentTime;
+                }
+                
+                // Hide only completed or past time slots (for today only)
+                if (isCompleted || isPastTime) return null;
+                
+                // Get break type for label
+                const getBreakLabel = () => {
+                  if (!isBreak) return '';
+                  
+                  const convertTo24 = (timeStr) => {
+                    if (timeStr.includes(' ')) {
+                      const [t, period] = timeStr.split(' ');
+                      let [hours, minutes] = t.split(':').map(Number);
+                      if (period === 'PM' && hours !== 12) hours += 12;
+                      if (period === 'AM' && hours === 12) hours = 0;
+                      return hours * 60 + minutes;
+                    }
+                    const [hours, minutes] = timeStr.split(':').map(Number);
+                    return hours * 60 + minutes;
+                  };
+                  
+                  const [timeStr, period] = time.split(' ');
+                  let [hours, minutes] = timeStr.split(':').map(Number);
+                  if (period === 'PM' && hours !== 12) hours += 12;
+                  if (period === 'AM' && hours === 12) hours = 0;
+                  const currentSlotTime = hours * 60 + minutes;
+                  
+                  const brk = docInfo.workingHours.breaks.find(b => {
+                    const breakStart = convertTo24(b.start);
+                    const breakEnd = convertTo24(b.end);
+                    return currentSlotTime >= breakStart && currentSlotTime <= breakEnd;
+                  });
+                  
+                  if (!brk) return '';
+                  
+                  const breakName = brk.label || (brk.type === 'tea' ? 'Tea Break' : brk.type === 'lunch' ? 'Lunch Break' : 'Break');
+                  const breakStartTime = convertTo24(brk.start);
+                  const breakEndTime = convertTo24(brk.end);
+                  
+                  if (currentSlotTime === breakStartTime) return `${breakName} Start`;
+                  if (currentSlotTime === breakEndTime) return `${breakName} End`;
+                  return breakName;
+                };
                 
                 return (
                   <button
                     key={index}
-                    onClick={() => !isBooked && setSlotTime(time)}
-                    disabled={isBooked}
-                    className={`text-xs sm:text-sm font-bold whitespace-nowrap px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200 group ${
-                      isBooked 
-                        ? "bg-red-100 text-red-400 cursor-not-allowed border border-red-200"
+                    onClick={() => !isBooked && !isBreak && setSlotTime(time)}
+                    disabled={isBooked || isBreak}
+                    className={`text-xs sm:text-sm font-bold whitespace-nowrap px-3 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl transition-all duration-200 group ${
+                      isBreak
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 opacity-60"
+                        : isBooked 
+                        ? "bg-orange-100 text-orange-600 cursor-not-allowed border border-orange-200"
                         : slotTime === time
                         ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
-                        : "bg-white border border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
+                        : "bg-white border border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 cursor-pointer"
                     }`}
                   >
-                    {time} {isBooked && "(Booked)"}
+                    {time} {isBreak && `(${getBreakLabel()})`} {isBooked && "(Booked)"}
                   </button>
                 );
               })}

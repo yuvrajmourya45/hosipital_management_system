@@ -18,7 +18,7 @@ const Register = () => {
     setLoading(true);
     try {
       // 1) Create user
-      const res = await axios.post("https://hosipital-backend.onrender.com/api/auth/register", {
+      const res = await axios.post("http://localhost:8000/api/auth/register", {
         name,
         email,
         password,
@@ -28,7 +28,7 @@ const Register = () => {
 
       // 2) Immediately login the user (frontend auto-login)
       try {
-        const loginRes = await axios.post("https://hosipital-backend.onrender.com/api/auth/login", {
+        const loginRes = await axios.post("http://localhost:8000/api/auth/login", {
           email,
           password,
         });

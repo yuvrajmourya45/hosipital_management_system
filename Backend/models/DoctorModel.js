@@ -16,6 +16,26 @@ const DoctorSchema = new mongoose.Schema({
     line1: String,
     line2: String
   },
+  workingHours: {
+    start: { type: String, default: "09:00 AM" },
+    end: { type: String, default: "05:00 PM" },
+    breaks: [{
+      type: {
+        type: String,
+        enum: ['tea', 'lunch', 'other'],
+        required: true
+      },
+      start: {
+        type: String,
+        required: true
+      },
+      end: {
+        type: String,
+        required: true
+      },
+      label: String
+    }]
+  },
   role: { type: String, default: "doctor" },
   date: { type: Number, default: Date.now }
 });

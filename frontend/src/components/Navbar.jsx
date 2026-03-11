@@ -11,21 +11,34 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // ✅ Check login status automatically
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
-    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    let parsedUser = null;
+    try {
+      parsedUser = storedUser && storedUser !== "undefined" ? JSON.parse(storedUser) : null;
+    } catch (e) {
+      console.error("Error parsing user from localStorage:", e);
+      localStorage.removeItem("user");
+    }
     setToken(storedToken);
     setUser(parsedUser);
 
     const onAuthChange = (e) => {
       const newToken = e?.detail?.token ?? localStorage.getItem("token");
-      const newUser =
-        e?.detail?.user ??
-        (localStorage.getItem("user")
-          ? JSON.parse(localStorage.getItem("user"))
-          : null);
+      let newUser = null;
+      try {
+        const userStr = e?.detail?.user;
+        if (userStr) {
+          newUser = typeof userStr === "string" ? JSON.parse(userStr) : userStr;
+        } else {
+          userStr = localStorage.getItem("user");
+          newUser = userStr && userStr !== "undefined" ? JSON.parse(userStr) : null;
+        }
+      } catch (e) {
+        console.error("Error parsing user:", e);
+        localStorage.removeItem("user");
+      }
       setToken(newToken);
       setUser(newUser);
     };
@@ -33,8 +46,15 @@ const Navbar = () => {
     const onStorage = () => {
       const t = localStorage.getItem("token");
       const u = localStorage.getItem("user");
+      let parsedU = null;
+      try {
+        parsedU = u && u !== "undefined" ? JSON.parse(u) : null;
+      } catch (e) {
+        console.error("Error parsing user from storage event:", e);
+        localStorage.removeItem("user");
+      }
       setToken(t);
-      setUser(u ? JSON.parse(u) : null);
+      setUser(parsedU);
     };
 
     window.addEventListener("authChange", onAuthChange);
@@ -46,7 +66,6 @@ const Navbar = () => {
     };
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -58,7 +77,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // ✅ Logout function (role-based redirect)
   const handleLogout = () => {
     const userRole = user?.role;
     localStorage.removeItem("token");
@@ -72,13 +90,12 @@ const Navbar = () => {
     else navigate("/login");
   };
 
-  // ✅ Get profile image safely
   const getProfileImage = () => {
     if (user?.profilePic) {
       if (user.profilePic.startsWith("http")) {
         return user.profilePic;
       } else {
-        return `https://hosipital-backend.onrender.com/${user.profilePic}`;
+        return `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}${user.profilePic.startsWith('/') ? '' : '/'}${user.profilePic}`;
       }
     }
     return hello.profile_pic;
@@ -87,7 +104,6 @@ const Navbar = () => {
   return (
     <>
       <div className="flex items-center justify-between text-sm py-3 px-4 sm:px-6 mb-5 border-b border-b-gray-400">
-        {/* Logo */}
         <img
           onClick={() => navigate("/")}
           className="w-32 sm:w-40 lg:w-44 cursor-pointer"
@@ -95,7 +111,6 @@ const Navbar = () => {
           alt="Logo"
         />
 
-        {/* Desktop Menu */}
         <ul className="hidden md:flex items-start gap-3 lg:gap-5 font-medium text-xs sm:text-sm">
           <NavLink to="/"><li className="py-1 hover:text-blue-600 transition-colors">HOME</li></NavLink>
           <NavLink to="/doctors"><li className="py-1 hover:text-blue-600 transition-colors">ALL DOCTORS</li></NavLink>
@@ -103,9 +118,7 @@ const Navbar = () => {
           <NavLink to="/contact"><li className="py-1 hover:text-blue-600 transition-colors">CONTACT</li></NavLink>
         </ul>
 
-        {/* Right Side */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Logged-in view */}
           {token && (
             <div className="relative" ref={dropdownRef}>
               <div 
@@ -125,69 +138,50 @@ const Navbar = () => {
                 />
               </div>
 
-              {/* Dropdown Menu */}
               {dropdownOpen && (
-                <div className="absolute top-full right-0 mt-2 min-w-40 sm:min-w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                  {user?.role === "user" && (
-                    <>
-                      <p 
-                        onClick={() => {
-                          navigate("/my-profile");
-                          setDropdownOpen(false);
-                        }} 
-                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
-                      >
-                        My Profile
-                      </p>
-                      <p 
-                        onClick={() => {
-                          navigate("/my-appointments");
-                          setDropdownOpen(false);
-                        }} 
-                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
-                      >
-                        My Appointments
-                      </p>
-                    </>
-                  )}
-                  {user?.role === "admin" && (
-                    <p 
-                      onClick={() => {
-                        navigate("/admin-dashboard");
-                        setDropdownOpen(false);
-                      }} 
-                      className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
-                    >
-                      Admin Dashboard
-                    </p>
-                  )}
-                  {user?.role === "doctor" && (
-                    <p 
-                      onClick={() => {
-                        navigate("/doctor-dashboard");
-                        setDropdownOpen(false);
-                      }} 
-                      className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
-                    >
-                      Doctor Dashboard
-                    </p>
-                  )}
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <p 
+                <div className="absolute top-full right-0 mt-2 min-w-48 bg-white rounded-lg shadow-2xl border border-gray-200 py-2 z-[9999]">
+                  <button
                     onClick={() => {
-                      handleLogout();
                       setDropdownOpen(false);
+                      navigate("/my-profile");
                     }} 
-                    className="px-4 py-2 text-sm hover:bg-red-50 text-red-600 cursor-pointer transition-colors"
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate("/my-appointments");
+                    }} 
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                  >
+                    My Appointments
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate("/medical-records");
+                    }} 
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                  >
+                    Medical Records
+                  </button>
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      handleLogout();
+                    }} 
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 cursor-pointer transition-colors"
                   >
                     Logout
-                  </p>
+                  </button>
                 </div>
               )}
             </div>
           )}
 
-          {/* Not logged in */}
           {!token && (
             <div className="hidden sm:flex gap-2 lg:gap-3">
               <button
@@ -205,7 +199,6 @@ const Navbar = () => {
             </div>
           )}
 
-          {/* Mobile Menu Icon */}
           <img
             onClick={() => setShowMenu(true)}
             className="w-5 sm:w-6 md:hidden cursor-pointer"
@@ -215,7 +208,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <div className={`${showMenu ? "fixed w-full" : "h-0 w-0"} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all`}>
         <div className="flex justify-between items-center px-4 sm:px-5 py-4 sm:py-6 border-b">
           <img className="w-28 sm:w-36" src={hello.logo} alt="Logo" />

@@ -13,7 +13,7 @@ export const useNotifications = (doctorId) => {
     
     try {
       setLoading(true);
-      const response = await axios.get(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}`);
+      const response = await axios.get(`http://localhost:8000/api/notifications/doctor/${doctorId}`);
       
       if (response.data.success) {
         const newNotifications = response.data.notifications;
@@ -41,7 +41,7 @@ export const useNotifications = (doctorId) => {
   // Mark single notification as read
   const markAsRead = useCallback(async (notificationId) => {
     try {
-      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/${notificationId}/read`, {
+      await axios.patch(`http://localhost:8000/api/notifications/${notificationId}/read`, {
         doctorId
       });
       
@@ -58,7 +58,7 @@ export const useNotifications = (doctorId) => {
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
-      await axios.patch(`https://hosipital-backend.onrender.com/api/notifications/doctor/${doctorId}/read-all`);
+      await axios.patch(`http://localhost:8000/api/notifications/doctor/${doctorId}/read-all`);
       
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);

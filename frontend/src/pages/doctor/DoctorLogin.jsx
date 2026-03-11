@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { getBackendUrl } from "../../utils/api";
 
 const DoctorLogin = () => {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ const DoctorLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("https://hosipital-backend.onrender.com/api/doctor/login", { email, password });
+      const response = await axios.post(`${getBackendUrl()}/api/doctor/login`, { email, password });
       
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("doctor", JSON.stringify(response.data.doctor));

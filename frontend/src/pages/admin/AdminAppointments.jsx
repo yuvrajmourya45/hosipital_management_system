@@ -10,7 +10,7 @@ export default function AdminAppointments() {
   const loadAppointments = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get("https://hosipital-backend.onrender.com/api/admin/appointments", {
+      const res = await axios.get("http://localhost:8000/api/admin/appointments", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(res.data.appointments || []);
@@ -24,7 +24,7 @@ export default function AdminAppointments() {
   const updateStatus = async (id, status) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post("https://hosipital-backend.onrender.com/api/admin/appointment-status",
+      await axios.post("http://localhost:8000/api/admin/appointment-status",
         { appointmentId: id, status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -39,7 +39,7 @@ export default function AdminAppointments() {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.post("https://hosipital-backend.onrender.com/api/admin/cancel-appointment",
+      await axios.post("http://localhost:8000/api/admin/cancel-appointment",
         { appointmentId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -52,6 +52,8 @@ export default function AdminAppointments() {
 
   useEffect(() => {
     loadAppointments();
+    const interval = setInterval(loadAppointments, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -101,7 +103,13 @@ export default function AdminAppointments() {
                         {a.doctor && typeof a.doctor === 'object' ? (
                           <>
                             <img
-                              src={a.doctor?.image?.startsWith('http') ? a.doctor.image : `https://hosipital-backend.onrender.com/uploads/${a.doctor?.image}`}
+                              src={
+                                a.doctor?.image?.startsWith('http') 
+                                  ? a.doctor.image 
+                                  : a.doctor?.image?.startsWith('/') 
+                                    ? `http://localhost:8000${a.doctor.image}` 
+                                    : `http://localhost:8000/uploads/${a.doctor?.image}`
+                              }
                               className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-100"
                               alt=""
                               onError={(e) => e.target.src = "https://via.placeholder.com/40"}
@@ -160,4 +168,3 @@ export default function AdminAppointments() {
     </div>
   );
 }
-

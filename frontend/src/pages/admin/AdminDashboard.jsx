@@ -25,6 +25,9 @@ import UsersPage from "./UsersPage";
 import AddDoctor from "./AddDoctor";
 import DoctorList from "./DoctorList";
 import AdminReports from "./AdminReports";
+import AdminHistory from "./AdminHistory";
+import AdminPatientDetails from "./AdminPatientDetails";
+import NotificationCenter from "../../components/NotificationCenter";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -37,24 +40,11 @@ export default function AdminDashboard() {
     recentAppointments: [],
   });
   const [activePage, setActivePage] = useState("dashboard");
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const notificationRef = useRef(null);
   const dropdownRef = useRef(null);
-
-  // Close notification when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setNotificationOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -68,8 +58,8 @@ export default function AdminDashboard() {
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
         const [adminRes, statsRes] = await Promise.all([
-          axios.get("https://hosipital-backend.onrender.com/api/admin/me", config),
-          axios.get("https://hosipital-backend.onrender.com/api/admin/stats", config),
+          axios.get("http://localhost:8000/api/admin/me", config),
+          axios.get("http://localhost:8000/api/admin/stats", config),
         ]);
 
         setAdmin(adminRes.data);
@@ -116,6 +106,7 @@ export default function AdminDashboard() {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { id: "appointments", label: "Appointments", icon: <Calendar size={20} /> },
+    { id: "history", label: "History", icon: <Activity size={20} /> },
     { id: "add-doctor", label: "Add Doctor", icon: <PlusCircle size={20} /> },
     { id: "doctors", label: "Doctors List", icon: <Stethoscope size={20} /> },
     { id: "users", label: "Patients", icon: <Users size={20} /> },
@@ -222,54 +213,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center gap-2 lg:gap-3 w-full sm:w-auto">
-              <div className="relative" ref={notificationRef}>
-                <button 
-                  onClick={() => setNotificationOpen(!notificationOpen)}
-                  className="p-2 lg:p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 relative transition-colors cursor-pointer"
-                >
-                  <Bell size={18} />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center pointer-events-none">
-                    <span className="text-white text-xs font-bold">3</span>
-                  </span>
-                </button>
-
-                {/* Notification Dropdown */}
-                {notificationOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <h3 className="text-sm font-bold text-slate-900">Notifications</h3>
-                    </div>
-                    
-                    <div className="max-h-64 overflow-y-auto">
-                      {[
-                        { id: 1, title: "New appointment booked", message: "Dr. Smith has a new appointment", time: "2 min ago", type: "appointment" },
-                        { id: 2, title: "Doctor registered", message: "New doctor Yuvraj Singh joined", time: "1 hour ago", type: "doctor" },
-                        { id: 3, title: "Payment received", message: "Payment of $50 received", time: "3 hours ago", type: "payment" }
-                      ].map((notification) => (
-                        <div key={notification.id} className="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-50 last:border-b-0">
-                          <div className="flex items-start gap-3">
-                            <div className={`w-2 h-2 rounded-full mt-2 ${
-                              notification.type === 'appointment' ? 'bg-blue-500' :
-                              notification.type === 'doctor' ? 'bg-green-500' : 'bg-orange-500'
-                            }`}></div>
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-slate-900">{notification.title}</p>
-                              <p className="text-xs text-slate-600 mt-1">{notification.message}</p>
-                              <p className="text-xs text-slate-400 mt-1">{notification.time}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div className="px-4 py-3 border-t border-slate-100">
-                      <button className="text-sm text-blue-600 hover:text-blue-700 font-semibold w-full text-center">
-                        View All Notifications
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationCenter doctorId={admin?._id || 'admin'} />
               <div className="h-8 lg:h-10 w-px bg-slate-200 mx-1"></div>
               
               {/* Profile Dropdown */}
@@ -342,12 +286,16 @@ export default function AdminDashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                   {[
-                    { label: "Total Doctors", value: stats.doctors, icon: <Stethoscope size={20} />, color: "blue", bg: "from-blue-500 to-blue-600" },
-                    { label: "Total Patients", value: stats.patients, icon: <Users size={20} />, color: "emerald", bg: "from-emerald-500 to-emerald-600" },
-                    { label: "Total Appointments", value: stats.totalAppointments, icon: <Calendar size={20} />, color: "violet", bg: "from-violet-500 to-violet-600" },
-                    { label: "Today's Appointments", value: stats.todayAppointments, icon: <Activity size={20} />, color: "orange", bg: "from-orange-500 to-orange-600" },
+                    { label: "Total Doctors", value: stats.doctors, icon: <Stethoscope size={20} />, color: "blue", bg: "from-blue-500 to-blue-600", page: "doctors" },
+                    { label: "Total Patients", value: stats.patients, icon: <Users size={20} />, color: "emerald", bg: "from-emerald-500 to-emerald-600", page: "users" },
+                    { label: "Total Appointments", value: stats.totalAppointments, icon: <Calendar size={20} />, color: "violet", bg: "from-violet-500 to-violet-600", page: "appointments" },
+                    { label: "Today's Appointments", value: stats.todayAppointments, icon: <Activity size={20} />, color: "orange", bg: "from-orange-500 to-orange-600", page: "appointments" },
                   ].map((stat, idx) => (
-                    <div key={idx} className="bg-white p-4 lg:p-6 rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+                    <div 
+                      key={idx} 
+                      onClick={() => setActivePage(stat.page)}
+                      className="bg-white p-4 lg:p-6 rounded-2xl shadow-lg border border-slate-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group cursor-pointer"
+                    >
                       <div className="flex justify-between items-start mb-3 lg:mb-4">
                         <div className={`p-2 lg:p-3 rounded-xl bg-gradient-to-r ${stat.bg} text-white shadow-lg group-hover:scale-110 transition-transform`}>
                           {stat.icon}
@@ -382,14 +330,23 @@ export default function AdminDashboard() {
                         <tbody className="divide-y divide-slate-50">
                           {stats.recentAppointments.length > 0 ? (
                             stats.recentAppointments.map((a) => (
-                              <tr key={a._id} className="hover:bg-slate-50/50 transition-colors">
+                              <tr 
+                                key={a._id} 
+                                onClick={() => setActivePage("appointments")}
+                                className="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                              >
                                 <td className="px-4 lg:px-6 py-3 lg:py-4">
                                   <p className="font-bold text-slate-700 text-sm">{a.user?.name || "User"}</p>
                                   <p className="text-xs text-slate-400 hidden sm:block">{a.user?.email}</p>
                                 </td>
                                 <td className="px-4 lg:px-6 py-3 lg:py-4 hidden sm:table-cell">
                                   <div className="flex items-center gap-2">
-                                    <img src={a.doctor?.image?.startsWith('http') ? a.doctor.image : `https://hosipital-backend.onrender.com${a.doctor.image}`} className="w-6 h-6 lg:w-7 lg:h-7 rounded-full object-cover" alt="" />
+                                    <img 
+                                      src={a.doctor?.image || 'https://via.placeholder.com/40'} 
+                                      className="w-6 h-6 lg:w-7 lg:h-7 rounded-full object-cover" 
+                                      alt={a.doctor?.name || 'Doctor'}
+                                      onError={(e) => e.target.src = 'https://via.placeholder.com/40'}
+                                    />
                                     <span className="text-sm font-semibold text-slate-600">{a.doctor?.name}</span>
                                   </div>
                                 </td>
@@ -458,8 +415,10 @@ export default function AdminDashboard() {
 
             {activePage === "add-doctor" && <AddDoctor />}
             {activePage === "doctors" && <DoctorList />}
-            {activePage === "users" && <UsersPage />}
+            {activePage === "users" && <UsersPage onViewPatient={(id) => { setSelectedPatientId(id); setActivePage("patient-details"); }} />}
+            {activePage === "patient-details" && <AdminPatientDetails patientId={selectedPatientId} onBack={() => setActivePage("users")} />}
             {activePage === "appointments" && <AdminAppointments />}
+            {activePage === "history" && <AdminHistory />}
             {activePage === "reports" && <AdminReports />}
             {activePage === "settings" && <div className="p-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400 font-bold italic">Settings module coming soon...</div>}
           </div>

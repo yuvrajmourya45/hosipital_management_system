@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { Upload, X, Save } from "lucide-react";
+import { Upload, X, Save, Plus, Trash2, Coffee, Utensils } from "lucide-react";
 
 export default function AddDoctor() {
     const [image, setImage] = useState(null);
@@ -19,6 +19,9 @@ export default function AddDoctor() {
         addressLine2: "",
         available: true,
         isVerified: false,
+        workingHoursStart: "08:00 AM",
+        workingHoursEnd: "05:00 PM",
+        breaks: [],
     });
 
     const [loading, setLoading] = useState(false);
@@ -49,13 +52,14 @@ export default function AddDoctor() {
         data.append("fees", formData.fees);
         data.append("about", formData.about);
         data.append("address", JSON.stringify({ line1: formData.addressLine1, line2: formData.addressLine2 }));
+        data.append("workingHours", JSON.stringify({ start: formData.workingHoursStart, end: formData.workingHoursEnd, breaks: formData.breaks }));
         data.append("available", formData.available);
         data.append("isVerified", formData.isVerified);
         if (image) data.append("image", image);
 
         try {
             const token = localStorage.getItem("token");
-            const res = await axios.post("https://hosipital-backend.onrender.com/api/admin/add-doctor", data, {
+            const res = await axios.post("http://localhost:8000/api/admin/add-doctor", data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
@@ -76,6 +80,9 @@ export default function AddDoctor() {
                 addressLine2: "",
                 available: true,
                 isVerified: false,
+                workingHoursStart: "08:00 AM",
+                workingHoursEnd: "05:00 PM",
+                breaks: [],
             });
             setImage(null);
             setImagePreview(null);
@@ -170,6 +177,99 @@ export default function AddDoctor() {
                         <label className="text-sm font-semibold text-gray-700">Address Line 2</label>
                         <input type="text" name="addressLine2" value={formData.addressLine2} onChange={handleChange} required className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Circle, Ring Road, London" />
                     </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Working Hours Start</label>
+                        <select name="workingHoursStart" value={formData.workingHoursStart} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <option value="08:00 AM">08:00 AM</option>
+                            <option value="09:00 AM">09:00 AM</option>
+                            <option value="10:00 AM">10:00 AM</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Working Hours End</label>
+                        <select name="workingHoursEnd" value={formData.workingHoursEnd} onChange={handleChange} className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <option value="03:00 PM">03:00 PM</option>
+                            <option value="04:00 PM">04:00 PM</option>
+                            <option value="05:00 PM">05:00 PM</option>
+                            <option value="06:00 PM">06:00 PM</option>
+                            <option value="07:00 PM">07:00 PM</option>
+                            <option value="08:00 PM">08:00 PM</option>
+                            <option value="09:00 PM">09:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Breaks Section */}
+                <div className="space-y-4 border-t pt-6">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold text-gray-700">Breaks (Tea/Lunch)</label>
+                        <button
+                            type="button"
+                            onClick={() => setFormData({...formData, breaks: [...formData.breaks, { type: 'tea', start: '10:00 AM', end: '10:15 AM', label: '' }]})}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                        >
+                            <Plus size={16} /> Add Break
+                        </button>
+                    </div>
+                    {formData.breaks.map((brk, idx) => (
+                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-5 gap-3 p-4 bg-gray-50 rounded-lg border">
+                            <select
+                                value={brk.type}
+                                onChange={(e) => {
+                                    const newBreaks = [...formData.breaks];
+                                    newBreaks[idx].type = e.target.value;
+                                    setFormData({...formData, breaks: newBreaks});
+                                }}
+                                className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                                <option value="tea">☕ Tea</option>
+                                <option value="lunch">🍽️ Lunch</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input
+                                type="text"
+                                value={brk.start}
+                                onChange={(e) => {
+                                    const newBreaks = [...formData.breaks];
+                                    newBreaks[idx].start = e.target.value;
+                                    setFormData({...formData, breaks: newBreaks});
+                                }}
+                                placeholder="10:00 AM"
+                                className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <input
+                                type="text"
+                                value={brk.end}
+                                onChange={(e) => {
+                                    const newBreaks = [...formData.breaks];
+                                    newBreaks[idx].end = e.target.value;
+                                    setFormData({...formData, breaks: newBreaks});
+                                }}
+                                placeholder="10:15 AM"
+                                className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <input
+                                type="text"
+                                value={brk.label}
+                                onChange={(e) => {
+                                    const newBreaks = [...formData.breaks];
+                                    newBreaks[idx].label = e.target.value;
+                                    setFormData({...formData, breaks: newBreaks});
+                                }}
+                                placeholder="Label (optional)"
+                                className="px-3 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setFormData({...formData, breaks: formData.breaks.filter((_, i) => i !== idx)})}
+                                className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="space-y-2">

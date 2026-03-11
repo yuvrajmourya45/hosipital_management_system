@@ -1,58 +1,81 @@
 import React, { useEffect } from "react";
 import { Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
+
+// User Pages
 import Home from "./pages/user/Home";
 import Docters from "./pages/user/Docters";
 import MyProfile from "./pages/user/MyProfile";
 import MyAppointment from "./pages/user/MyAppointment";
+import MedicalRecords from "./pages/user/MedicalRecords";
 import Login from "./pages/user/Login";
+import Register from "./pages/user/Register";
 import About from "./pages/user/About";
 import Contact from "./pages/user/Contact";
 import Appointment from "./pages/user/Appointment";
+import Debug from "./pages/user/Debug";
+
+// Admin Pages
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPatientDetails from "./pages/admin/AdminPatientDetails";
+
+// Doctor Pages
+import DoctorLogin from "./pages/doctor/DoctorLogin";
+import DoctorDashboard from "./pages/doctor/DoctorDashboard";
+
+// Components
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Register from "./pages/user/Register";
-import AdminLogin from "./pages/admin/AdminLogin";
-import DoctorLogin from "./pages/doctor/DoctorLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 
-// Admin Protected Route
+// ============ PROTECTED ROUTE WRAPPERS ============
+
+// Admin Route - Only admin can access
 const AdminProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
-  // Basic check for token existence. AdminDashboard will do deeper verification.
   if (!token) return <Navigate to="/admin-login" replace />;
   return children;
 };
 
-// Doctor Protected Route
+// Doctor Route - Only doctor can access
 const DoctorProtectedRoute = ({ children }) => {
-  const doctor = JSON.parse(localStorage.getItem("doctor") || "{}");
+  const doctorStr = localStorage.getItem("doctor");
+  const doctor = (doctorStr && doctorStr !== "undefined") ? JSON.parse(doctorStr) : {};
   const token = localStorage.getItem("token");
   if (!token || !doctor._id) return <Navigate to="/doctor-login" replace />;
   return children;
 };
 
+// ============ MAIN APP COMPONENT ============
+
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  // Get user data from localStorage
+  const userStr = localStorage.getItem("user");
+  const user = (userStr && userStr !== "undefined") ? JSON.parse(userStr) : {};
   const token = localStorage.getItem("token");
 
+  // Check if current page is admin or doctor page
   const isAdminPage = location.pathname.startsWith("/admin-");
   const isDoctorPage = location.pathname.startsWith("/doctor-");
   const isDedicatedPage = isAdminPage || isDoctorPage;
 
-  // ✅ Auto-redirect Doctor/Admin away from User pages
+  // Auto-redirect based on user role
   useEffect(() => {
     if (token) {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const doctor = JSON.parse(localStorage.getItem("doctor") || "{}");
+      const userStr = localStorage.getItem("user") || "{}";
+      const user = (userStr !== "undefined") ? JSON.parse(userStr) : {};
+      const doctorStr = localStorage.getItem("doctor") || "{}";
+      const doctor = (doctorStr !== "undefined") ? JSON.parse(doctorStr) : {};
       
+      // Redirect admin to admin dashboard
       if (user.role === "admin" && !isAdminPage && location.pathname !== "/admin-login") {
         navigate("/admin-dashboard");
-      } else if (doctor._id && !isDoctorPage && location.pathname !== "/doctor-login") {
+      } 
+      // Redirect doctor to doctor dashboard
+      else if (doctor._id && !isDoctorPage && location.pathname !== "/doctor-login") {
         navigate("/doctor-dashboard");
       }
     }
@@ -60,21 +83,25 @@ const App = () => {
 
   return (
     <div className={isDedicatedPage ? "" : "mx-4 sm:mx-[10%]"}>
+      {/* Show Navbar only on user pages */}
       {!isDedicatedPage && <Navbar />}
 
       <Routes>
-        {/* Public Routes */}
+        {/* ========== PUBLIC ROUTES ========== */}
         <Route path="/" element={<Home />} />
         <Route path="/doctors" element={<Docters />} />
         <Route path="/doctors/:speciality" element={<Docters />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/debug" element={<Debug />} />
+        
+        {/* ========== AUTH ROUTES ========== */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/doctor-login" element={<DoctorLogin />} />
 
-        {/* Protected User Routes */}
+        {/* ========== USER PROTECTED ROUTES ========== */}
         <Route
           path="/my-profile"
           element={
@@ -92,6 +119,14 @@ const App = () => {
           }
         />
         <Route
+          path="/medical-records"
+          element={
+            <ProtectedRoute>
+              <MedicalRecords />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/appointment/:docId"
           element={
             <ProtectedRoute>
@@ -100,7 +135,7 @@ const App = () => {
           }
         />
 
-        {/* Admin Protected Route */}
+        {/* ========== ADMIN PROTECTED ROUTES ========== */}
         <Route
           path="/admin-dashboard"
           element={
@@ -109,8 +144,16 @@ const App = () => {
             </AdminProtectedRoute>
           }
         />
+        <Route
+          path="/admin/patients/:patientId"
+          element={
+            <AdminProtectedRoute>
+              <AdminPatientDetails />
+            </AdminProtectedRoute>
+          }
+        />
 
-        {/* Doctor Protected Route */}
+        {/* ========== DOCTOR PROTECTED ROUTES ========== */}
         <Route
           path="/doctor-dashboard"
           element={
@@ -120,14 +163,14 @@ const App = () => {
           }
         />
 
-        {/* Redirect unknown routes */}
+        {/* ========== 404 REDIRECT ========== */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
+      {/* Show Footer only on user pages */}
       {!isDedicatedPage && <Footer />}
     </div>
   );
 };
 
 export default App;
-
