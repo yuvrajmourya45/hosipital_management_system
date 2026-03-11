@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Calendar, User, Filter, TrendingUp, Clock, CheckCircle, XCircle, Search } from "lucide-react";
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 const AdminHistory = () => {
   const [history, setHistory] = useState([]);

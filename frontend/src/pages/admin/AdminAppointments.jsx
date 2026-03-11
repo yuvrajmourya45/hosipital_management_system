@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Calendar, CheckCircle, XCircle, Clock, MoreVertical, Check, X } from "lucide-react";
-import { getBackendUrl, getImageUrl } from "../../utils/config";
+import { getBackendUrl, getImageUrl } from "../../utils/config-prod";
 
 export default function AdminAppointments() {
   const [appointments, setAppointments] = useState([]);

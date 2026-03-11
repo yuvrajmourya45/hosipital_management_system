@@ -28,7 +28,7 @@ import AdminReports from "./AdminReports";
 import AdminHistory from "./AdminHistory";
 import AdminPatientDetails from "./AdminPatientDetails";
 import NotificationCenter from "../../components/NotificationCenter";
-import { getBackendUrl } from "../../utils/config";
+import { getBackendUrl } from "../../utils/config-prod";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Upload, X, Save, Plus, Trash2, Coffee, Utensils } from "lucide-react";
-import { getBackendUrl } from "../../utils/config";
+import { getBackendUrl } from "../../utils/config-prod";
 
 export default function AddDoctor() {
     const [image, setImage] = useState(null);
