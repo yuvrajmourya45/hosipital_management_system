@@ -25,13 +25,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-// CORS Configuration
-const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.FRONTEND_URL]
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'];
-
+// CORS Configuration - Allow all origins temporarily
 app.use(cors({
-  origin: allowedOrigins,
+  origin: true, // Allow all origins
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cache-Control', 'Pragma']
@@ -83,9 +79,9 @@ app.get("/api/doctors", async (req, res) => {
       if (obj.image) {
         if (obj.image.startsWith('http')) {
         } else if (obj.image.startsWith('/')) {
-          obj.image = `${process.env.NODE_ENV === 'production' ? 'https://your-render-app.onrender.com' : 'http://localhost:8000'}${obj.image}`;
+          obj.image = `${process.env.NODE_ENV === 'production' ? 'https://hosipital-management-system-backend.onrender.com' : 'http://localhost:8000'}${obj.image}`;
         } else {
-          obj.image = `${process.env.NODE_ENV === 'production' ? 'https://your-render-app.onrender.com' : 'http://localhost:8000'}/uploads/${obj.image}`;
+          obj.image = `${process.env.NODE_ENV === 'production' ? 'https://hosipital-management-system-backend.onrender.com' : 'http://localhost:8000'}/uploads/${obj.image}`;
         }
       }
       return { ...obj, available: obj.available !== undefined ? obj.available : true };
