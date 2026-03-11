@@ -1,5 +1,6 @@
 // Centralized backend URL configuration
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+// Force production URL for now
+export const BACKEND_URL = 'https://hosipital-management-system-backend.onrender.com';
 
 console.log('🔧 Config loaded:');
 console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
