@@ -27,6 +27,7 @@ import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DebugBackendUrl from "./components/DebugBackendUrl";
 
 // ============ PROTECTED ROUTE WRAPPERS ============
 
@@ -83,6 +84,7 @@ const App = () => {
 
   return (
     <div className={isDedicatedPage ? "" : "mx-4 sm:mx-[10%]"}>
+      <DebugBackendUrl />
       {/* Show Navbar only on user pages */}
       {!isDedicatedPage && <Navbar />}
 
