@@ -1,13 +1,14 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { doctors as localDoctors } from "../assets/assets_frontend/assets";
+import { getBackendUrl } from "../utils/config";
 
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
   const [doctors, setDoctors] = useState([]);
   const currencySymbol = "$";
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://hosipital-management-system-backend.onrender.com";
+  const backendUrl = getBackendUrl();
 
   const getDoctorsData = async () => {
     try {
