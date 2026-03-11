@@ -1,12 +1,13 @@
 // Centralized backend URL configuration
-// Force production URL for now
+// Force production URL for now - Updated at 2024-12-19 15:30
 export const BACKEND_URL = 'https://hosipital-management-system-backend.onrender.com';
 
-console.log('🔧 Config loaded:');
+console.log('🔧 Config loaded at:', new Date().toISOString());
 console.log('  - VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
 console.log('  - Final BACKEND_URL:', BACKEND_URL);
 
 export const getBackendUrl = () => {
+  console.log('🌐 getBackendUrl() called, returning:', BACKEND_URL);
   return BACKEND_URL;
 };
 
