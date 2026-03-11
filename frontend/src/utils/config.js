@@ -1,5 +1,5 @@
 // Centralized backend URL configuration
-export const BACKEND_URL = 'https://hosipital-management-system-backend.onrender.com';
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://hosipital-management-system-backend.onrender.com';
 
 export const getBackendUrl = () => {
   return BACKEND_URL;
