@@ -195,6 +195,43 @@ app.post("/api/seed-doctors", async (req, res) => {
   }
 });
 
+// Seed Admin Endpoint (Temporary)
+app.post("/api/seed-admin", async (req, res) => {
+  try {
+    const bcryptjs = (await import("bcryptjs")).default;
+    const User = (await import("./models/UserModel.js")).default;
+    
+    const adminUser = {
+      name: "Admin",
+      email: "admin@yuvrajdocter.com",
+      password: "YuvrajAdmin@2024",
+      role: "admin"
+    };
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({ email: adminUser.email });
+    if (existingAdmin) {
+      return res.json({ message: "Admin user already exists", email: adminUser.email });
+    }
+
+    // Hash password and create admin
+    const hashedPassword = await bcryptjs.hash(adminUser.password, 10);
+    const newAdmin = new User({
+      ...adminUser,
+      password: hashedPassword
+    });
+    
+    await newAdmin.save();
+    res.json({ 
+      message: "Admin user created successfully!", 
+      email: adminUser.email,
+      password: adminUser.password
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Server Start
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
