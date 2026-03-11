@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowLeft, FileText, Calendar, Trash2, Download, User, Activity, Heart, Pill } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 const AdminPatientDetails = ({ patientId, onBack }) => {
   const [patient, setPatient] = useState(null);

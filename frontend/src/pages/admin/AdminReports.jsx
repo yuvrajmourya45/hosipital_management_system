@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { BarChart3, Users, Stethoscope, Calendar, TrendingUp } from "lucide-react";
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 export default function AdminReports() {
   const [stats, setStats] = useState({

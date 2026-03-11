@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Trash2, Edit, Search, UserCheck, UserX } from "lucide-react";
-import { getBackendUrl, getImageUrl } from '../../utils/config';
+import { getBackendUrl, getImageUrl } from '../../utils/config-prod';
 
 export default function DoctorList() {
     const [doctors, setDoctors] = useState([]);

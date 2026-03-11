@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Users, Plus, Edit3, Trash2, X, Search, Mail, Key, FileText } from "lucide-react";
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 export default function UsersPage({ onViewPatient }) {
   const [users, setUsers] = useState([]);
