@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getBackendUrl } from "../../utils/api";
+import { getBackendUrl } from "../../utils/config";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
