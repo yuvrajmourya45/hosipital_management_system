@@ -21,6 +21,7 @@ import NotificationCenter from "../../components/NotificationCenter";
 import { useNotifications } from "../../hooks/useNotifications";
 import PatientHistory from "./PatientHistory";
 import PatientMedicalRecords from "../../components/PatientMedicalRecords";
+import { getBackendUrl, getImageUrl } from "../../utils/config";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -42,11 +43,7 @@ const DoctorDashboard = () => {
   const { notifications, unreadCount, addNotification } = useNotifications(doctorId);
 
   const getImageUrl = (img) => {
-    if (!img) return null;
-    if (typeof img !== 'string') return null;
-    if (img.startsWith('http')) return img;
-    if (img.startsWith('/')) return `http://localhost:8000${img}`;
-    return `http://localhost:8000/uploads/${img}`;
+    return getImageUrl(img);
   };
 
   useEffect(() => {
@@ -74,8 +71,8 @@ const DoctorDashboard = () => {
     try {
       setLoading(true);
       const [docRes, apptRes] = await Promise.all([
-        axios.get(`http://localhost:8000/api/doctor/profile/${doctorId}`),
-        axios.get(`http://localhost:8000/api/appointments/doctor/${doctorId}`)
+        axios.get(`${getBackendUrl()}/api/doctor/profile/${doctorId}`),
+        axios.get(`${getBackendUrl()}/api/appointments/doctor/${doctorId}`)
       ]);
       setDoctor(docRes.data);
       setAvailable(docRes.data.available ?? true);
@@ -137,7 +134,7 @@ const DoctorDashboard = () => {
       
       for (const patient of patientsArray) {
         try {
-          const res = await axios.get(`http://localhost:8000/api/medical-records/user/${patient._id}`, {
+          const res = await axios.get(`${getBackendUrl()}/api/medical-records/user/${patient._id}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.data && res.data.length > 0) {
@@ -157,7 +154,7 @@ const DoctorDashboard = () => {
   const toggleAvailability = async () => {
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/doctor/availability/${doctorId}`,
+        `${getBackendUrl()}/api/doctor/availability/${doctorId}`,
         { available: !available },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -180,13 +177,13 @@ const DoctorDashboard = () => {
       let response;
       if (status === 'completed') {
         response = await axios.patch(
-          `http://localhost:8000/api/doctor/complete/${appointmentId}`,
+          `${getBackendUrl()}/api/doctor/complete/${appointmentId}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         response = await axios.patch(
-          `http://localhost:8000/api/appointments/${appointmentId}/status`,
+          `${getBackendUrl()}/api/appointments/${appointmentId}/status`,
           { status },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -210,7 +207,7 @@ const DoctorDashboard = () => {
       });
       if (imageFile) updateData.append('image', imageFile);
       const res = await axios.put(
-        `http://localhost:8000/api/doctor/profile/${doctorId}`,
+        `${getBackendUrl()}/api/doctor/profile/${doctorId}`,
         updateData,
         { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } }
       );

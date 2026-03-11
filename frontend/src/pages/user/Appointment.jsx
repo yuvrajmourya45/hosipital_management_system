@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import { hello } from "../../assets/assets_frontend/assets";
 import RelatedDoctors from "../../components/RelatedDocters";
+import { getBackendUrl } from "../../utils/config";
 
 const Appointment = () => {
   const { docId } = useParams();
@@ -59,7 +60,7 @@ const Appointment = () => {
     // Fetch booked slots for this doctor
     const fetchBookedSlots = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/appointments/doctor/${docInfo._id}`);
+        const res = await fetch(`${getBackendUrl()}/api/appointments/doctor/${docInfo._id}`);
         const data = await res.json();
         const booked = data.filter(apt => !apt.cancelled && apt.status !== 'rejected' && apt.status !== 'completed')
           .map(apt => `${apt.date}-${apt.time}`);
@@ -142,7 +143,7 @@ const Appointment = () => {
     console.log('🏥 Doctor ID being sent:', docInfo._id);
 
     try {
-      const res = await fetch("http://localhost:8000/api/appointments", {
+      const res = await fetch(`${getBackendUrl()}/api/appointments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
