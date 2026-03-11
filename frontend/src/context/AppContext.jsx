@@ -7,7 +7,7 @@ export const AppContext = createContext();
 const AppContextProvider = ({ children }) => {
   const [doctors, setDoctors] = useState([]);
   const currencySymbol = "$";
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://hosipital-management-system-backend.onrender.com";
 
   const getDoctorsData = async () => {
     try {
