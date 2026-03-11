@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, UserPlus } from "lucide-react";
-import { getBackendUrl } from "../../utils/config";
+import { getBackendUrl } from "../../utils/config-prod";
 
 const Register = () => {
   const navigate = useNavigate();

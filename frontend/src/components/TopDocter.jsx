@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
-import { getBackendUrl } from '../utils/config';
+import { getBackendUrl } from '../utils/config-prod';
 
 const TopDoctor = () => {
   const navigate = useNavigate()

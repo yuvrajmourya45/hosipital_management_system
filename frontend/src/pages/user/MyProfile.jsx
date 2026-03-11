@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { getBackendUrl, getImageUrl } from '../../utils/config';
+import { getBackendUrl, getImageUrl } from '../../utils/config-prod';
 
 const MyProfile = () => {
   const [userData, setUserData] = useState(null);

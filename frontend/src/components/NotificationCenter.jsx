@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, Check, Clock, Calendar, User, AlertCircle } from 'lucide-react';
 import axios from 'axios';
-import { getBackendUrl } from '../utils/config';
+import { getBackendUrl } from '../utils/config-prod';
 
 const NotificationCenter = ({ doctorId, className = "" }) => {
   const [notifications, setNotifications] = useState([]);

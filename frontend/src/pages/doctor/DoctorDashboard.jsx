@@ -21,7 +21,7 @@ import NotificationCenter from "../../components/NotificationCenter";
 import { useNotifications } from "../../hooks/useNotifications";
 import PatientHistory from "./PatientHistory";
 import PatientMedicalRecords from "../../components/PatientMedicalRecords";
-import { getBackendUrl, getImageUrl } from "../../utils/config";
+import { getBackendUrl, getImageUrl } from "../../utils/config-prod";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Upload, FileText, Trash2, Download, Calendar, FileCheck } from 'lucide-react';
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 const MedicalRecords = () => {
   const [records, setRecords] = useState([]);

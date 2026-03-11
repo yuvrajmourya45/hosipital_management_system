@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FileText, Download, X, Calendar, FileCheck, Loader, User, Mail, Phone, MapPin } from 'lucide-react';
-import { getBackendUrl } from '../utils/config';
+import { getBackendUrl } from '../utils/config-prod';
 
 const PatientMedicalRecords = ({ patientId, onClose }) => {
   const [records, setRecords] = useState([]);

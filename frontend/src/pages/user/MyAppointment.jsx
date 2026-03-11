@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { doctors } from "../../assets/assets_frontend/assets";
-import { getBackendUrl, getImageUrl } from "../../utils/config";
+import { getBackendUrl, getImageUrl } from "../../utils/config-prod";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);

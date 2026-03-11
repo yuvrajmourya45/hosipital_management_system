@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Calendar, User, Filter, TrendingUp, Clock, CheckCircle, XCircle } from "lucide-react";
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 const PatientHistory = ({ doctorId }) => {
   const [history, setHistory] = useState([]);

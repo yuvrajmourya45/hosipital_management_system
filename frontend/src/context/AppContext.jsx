@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { doctors as localDoctors } from "../assets/assets_frontend/assets";
-import { getBackendUrl } from "../utils/config";
+import { getBackendUrl } from "../utils/config-prod";
 
 export const AppContext = createContext();
 

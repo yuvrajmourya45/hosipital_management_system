@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
-import { getBackendUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config-prod';
 
 const Docters = () => {
   const { speciality } = useParams();

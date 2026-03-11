@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { getBackendUrl } from '../utils/config';
+import { getBackendUrl } from '../utils/config-prod';
 
 export const useNotifications = (doctorId) => {
   const [notifications, setNotifications] = useState([]);

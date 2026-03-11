@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
 import { hello } from "../../assets/assets_frontend/assets";
 import RelatedDoctors from "../../components/RelatedDocters";
-import { getBackendUrl } from "../../utils/config";
+import { getBackendUrl } from "../../utils/config-prod";
 
 const Appointment = () => {
   const { docId } = useParams();
