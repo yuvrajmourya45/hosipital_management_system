@@ -18,12 +18,13 @@ const AppContextProvider = ({ children }) => {
         setDoctors(data);
         console.log('✅ Using backend doctors:', data.length);
       } else {
-        console.log('❌ No doctors found in backend');
-        setDoctors([]);
+        console.log('❌ No doctors found in backend, using local doctors');
+        setDoctors(localDoctors);
       }
     } catch (error) {
       console.log('❌ Error fetching doctors:', error);
-      setDoctors([]);
+      console.log('🔄 Falling back to local doctors');
+      setDoctors(localDoctors);
     }
   };
 

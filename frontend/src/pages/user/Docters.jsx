@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppContext } from "../../context/AppContext";
-import { getImageUrl } from '../../utils/config';
+import { getBackendUrl } from '../../utils/config';
 
 const Docters = () => {
   const { speciality } = useParams();
@@ -10,11 +10,16 @@ const Docters = () => {
   const [filterDoc, setFilterDoc] = useState([]);
   const [showFilter, setShowFilter] = useState(false)
 
+  const defaultImage = "https://via.placeholder.com/300x400/e2e8f0/64748b?text=Doctor";
+
   useEffect(() => {
+    console.log('Docters component - doctors from context:', doctors);
+    console.log('Docters component - doctors length:', doctors?.length);
     let filtered = doctors.filter(doc => doc.isVerified !== false);
     if (speciality) {
       filtered = filtered.filter((doc) => doc.speciality === speciality);
     }
+    console.log('Docters component - filtered doctors:', filtered);
     setFilterDoc(filtered);
   }, [doctors, speciality]);
 
@@ -50,12 +55,12 @@ const Docters = () => {
                   <div className="w-full h-48 sm:h-56 flex items-center justify-center bg-gray-50">
                     <img
                       src={item.image?.startsWith('http') ? item.image.replace('/uploads//uploads/', '/uploads/') : 
-                           item.image ? getImageUrl(item.image) : 
-                           'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRvY3RvciBJbWFnZTwvdGV4dD48L3N2Zz4='}}
+                           item.image ? `${getBackendUrl()}${item.image.startsWith('/') ? '' : '/'}${item.image}` : 
+                           defaultImage}
                       alt={item.name}
                       className="max-h-full object-contain"
                       onError={(e) => {
-                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRvY3RvciBJbWFnZTwvdGV4dD48L3N2Zz4=';
+                        e.target.src = defaultImage;
                       }}
                     />
                   </div>

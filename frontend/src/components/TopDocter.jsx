@@ -1,11 +1,18 @@
 import React, { useContext } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
-import { getImageUrl } from '../utils/config';
+import { getBackendUrl } from '../utils/config';
 
 const TopDoctor = () => {
   const navigate = useNavigate()
   const { doctors, backendUrl } = useContext(AppContext)
+
+  const defaultImage = "https://via.placeholder.com/300x400/e2e8f0/64748b?text=Doctor";
+
+  // Debug logging
+  console.log('TopDoctor - doctors:', doctors);
+  console.log('TopDoctor - doctors length:', doctors?.length);
+  console.log('TopDoctor - backendUrl:', backendUrl);
 
   return (
     <div className='flex flex-col items-center gap-4 my-8 lg:my-16 text-gray-900 px-4 lg:px-10'>
@@ -25,11 +32,11 @@ const TopDoctor = () => {
               <img
                 className='bg-blue-50 w-full h-40 lg:h-48 object-cover'
                 src={item.image?.startsWith('http') ? item.image.replace('/uploads//uploads/', '/uploads/') : 
-                     item.image ? getImageUrl(item.image) : 
-                     'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRvY3RvciBJbWFnZTwvdGV4dD48L3N2Zz4='}}
+                     item.image ? `${getBackendUrl()}${item.image.startsWith('/') ? '' : '/'}${item.image}` : 
+                     defaultImage}
                 alt={item.name}
                 onError={(e) => {
-                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkRvY3RvciBJbWFnZTwvdGV4dD48L3N2Zz4=';
+                  e.target.src = defaultImage;
                 }}
               />
 
