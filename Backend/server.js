@@ -44,10 +44,18 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // MongoDB Connection
 const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/docter";
+console.log('🔍 Attempting MongoDB connection to:', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')); // Hide credentials in logs
 mongoose
   .connect(mongoUri)
-  .then(() => console.log("✅ MongoDB Connected ->", mongoUri))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+  .then(() => {
+    console.log("✅ MongoDB Connected Successfully!");
+    console.log('📊 Database Name:', mongoose.connection.name);
+    console.log('🌐 Connection State:', mongoose.connection.readyState);
+  })
+  .catch((err) => {
+    console.log("❌ MongoDB Connection Error:", err.message);
+    console.log('🔧 MongoDB URI (masked):', mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'));
+  });
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -89,6 +97,37 @@ app.get("/api/doctors", async (req, res) => {
     res.json(doctorsWithImageUrl);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Health Check Endpoint
+app.get("/api/health", async (req, res) => {
+  try {
+    const dbState = mongoose.connection.readyState;
+    const dbStates = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting'
+    };
+    
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      database: {
+        state: dbStates[dbState],
+        name: mongoose.connection.name,
+        host: mongoose.connection.host,
+        port: mongoose.connection.port
+      },
+      environment: process.env.NODE_ENV || 'development'
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      status: 'ERROR',
+      error: err.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
