@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Upload, FileText, Trash2, Download, Calendar, FileCheck } from 'lucide-react';
+import { getBackendUrl } from '../../utils/config';
 
 const MedicalRecords = () => {
   const [records, setRecords] = useState([]);
@@ -38,7 +39,7 @@ const MedicalRecords = () => {
 
   const fetchRecords = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/medical-records/my-records', {
+      const res = await axios.get(`${getBackendUrl()}/api/medical-records/my-records`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setRecords(res.data);
@@ -62,7 +63,7 @@ const MedicalRecords = () => {
     data.append('file', formData.file);
 
     try {
-      await axios.post('http://localhost:8000/api/medical-records/upload', data, {
+      await axios.post(`${getBackendUrl()}/api/medical-records/upload`, data, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Medical record uploaded successfully');
@@ -79,7 +80,7 @@ const MedicalRecords = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this record?')) return;
     try {
-      await axios.delete(`http://localhost:8000/api/medical-records/${id}`, {
+      await axios.delete(`${getBackendUrl()}/api/medical-records/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Record deleted');
@@ -213,7 +214,7 @@ const MedicalRecords = () => {
                 </div>
                 <div className="flex gap-2">
                   <a 
-                    href={`http://localhost:8000/uploads/medical-records/${record.file}`} 
+                    href={`${getBackendUrl()}/uploads/medical-records/${record.file}`} 
                     target="_blank" 
                     rel="noreferrer" 
                     className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

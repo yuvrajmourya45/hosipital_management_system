@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { doctors } from "../../assets/assets_frontend/assets";
-import { getBackendUrl } from "../../utils/api";
+import { getBackendUrl, getImageUrl } from "../../utils/config";
 
 const MyAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -207,11 +207,11 @@ const MyAppointments = () => {
                   // server now returns absolute URL, but handle relative just in case
                   image = item.doctor.image.startsWith('http')
                     ? item.doctor.image
-                    : `http://localhost:8000${item.doctor.image.startsWith('/') ? '' : '/'}${item.doctor.image}`;
+                    : getImageUrl(item.doctor.image);
                 } else if (demoDoctor?.image) {
                   image = demoDoctor.image.startsWith('http')
                     ? demoDoctor.image
-                    : `http://localhost:8000${demoDoctor.image.startsWith('/') ? '' : '/'}${demoDoctor.image}`;
+                    : getImageUrl(demoDoctor.image);
                 }
                 
                 console.log('📋 Final data:', { doctorName: formattedName, speciality, image });

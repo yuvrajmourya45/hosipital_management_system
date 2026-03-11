@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getBackendUrl, getImageUrl } from '../utils/config';
 
 const MyProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -29,7 +30,7 @@ const MyProfile = () => {
 
     try {
       const res = await axios.put(
-        `http://localhost:8000/api/auth/profile/${userData._id}`,
+        `${getBackendUrl()}/api/auth/profile/${userData._id}`,
         formData,
         {
           headers: {
@@ -64,7 +65,7 @@ const MyProfile = () => {
                 profilePic
                   ? URL.createObjectURL(profilePic)
                   : userData.profilePic
-                  ? `http://localhost:8000${userData.profilePic}`
+                  ? getImageUrl(userData.profilePic)
                   : "https://via.placeholder.com/120"
               }
               alt="Profile"

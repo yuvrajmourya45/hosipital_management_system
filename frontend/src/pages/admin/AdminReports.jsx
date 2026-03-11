@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { BarChart3, Users, Stethoscope, Calendar, TrendingUp } from "lucide-react";
+import { getBackendUrl } from '../../utils/config';
 
 export default function AdminReports() {
   const [stats, setStats] = useState({
@@ -15,9 +16,9 @@ export default function AdminReports() {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const [doc, pat, app] = await Promise.all([
-        axios.get("http://localhost:8000/api/admin/doctors", config),
-        axios.get("http://localhost:8000/api/admin/users", config),
-        axios.get("http://localhost:8000/api/admin/appointments", config)
+        axios.get(`${getBackendUrl()}/api/admin/doctors`, config),
+        axios.get(`${getBackendUrl()}/api/admin/users`, config),
+        axios.get(`${getBackendUrl()}/api/admin/appointments`, config)
       ]);
 
       setStats({
